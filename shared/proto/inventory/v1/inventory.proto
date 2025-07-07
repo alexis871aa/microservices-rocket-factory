@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package inventory.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "../shared/pkg/proto/inventory/v1;inventory_v1";
+
+service InventoryService {
+  rpc GetPart(GetPartRequest) returns (GetPartResponse);
+
+  rpc ListParts(ListPartsRequest) returns (ListPartsResponse);
+}
+
+enum Category {
+  UNKNOWN = 0;  // неизвестная категория
+  ENGINE = 1;   // двигатель
+  FUEL = 2;     // топливо
+  PORTHOLE = 3; // иллюминатор
+  WING = 4;     // крыло
+}
+
+message Dimensions {
+  double length = 1;  // длина в см
+  double width = 2;   // ширина в см
+  double height = 3;  // высота в см
+  double weight = 4;  // вес в кг
+}
+
+message Manufacturer {
+  string name = 1;      // название
+  string country = 2;   // страна производства
+  string website = 3;   // сайт производителя
+}
+
+message Value {
+  oneof value {
+    string string_value = 1;  // строковое значение
+    int64 int64_value = 2;    // целое значение
+    double double_value = 3;  // дробное значение
+    bool bool_value = 4;      // логическое значение
+  }
+}
+
+message PartsFilter {
+  repeated string uuids = 1;                    // список UUID'ов
+  repeated string names = 2;                    // список имён
+  repeated Category categories = 3;             // список категорий
+  repeated string manufacturer_countries = 4;   // список стран производителей
+  repeated string tags = 5;                     // список тегов
+}
+
+message Part {
+  string uuid = 1;                            // уникальный идентификатор детали
+  string name = 2;                            // название детали
+  string description = 3;                     // описание детали
+  double price = 4;                           // цена за единицу
+  int64 stock_quantity = 5;                   // количество на складе
+  Category category = 6;                      // категория
+  Dimensions dimensions = 7;                  // размеры детали
+  Manufacturer manufacturer = 8;              // информация о производителе
+  repeated string tags = 9;                   // теги для быстрого поиска
+  map<string, Value> metadata = 10;           // гибкие метаданные
+  google.protobuf.Timestamp created_at = 11;  // дата создания
+  google.protobuf.Timestamp updated_at = 12;  // дата обновления
+}
+
+message GetPartRequest {
+  string uuid = 1;
+}
+
+message GetPartResponse {
+  Part part = 1;
+}
+
+message ListPartsRequest {
+  PartsFilter filter = 1;
+}
+
+message ListPartsResponse {
+  repeated Part parts = 1;
+}
