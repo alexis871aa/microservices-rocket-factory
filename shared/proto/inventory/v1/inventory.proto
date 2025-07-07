@@ -3,8 +3,6 @@ syntax = "proto3";
 package inventory.v1;
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/wrappers.proto";
-import "google/protobuf/empty.proto";
 
 option go_package = "../shared/pkg/proto/inventory/v1;inventory_v1";
 
@@ -14,6 +12,9 @@ service InventoryService {
   rpc ListParts(ListPartsRequest) returns (ListPartsResponse);
 }
 
+/**
+ * Категория детали космического корабля
+ */
 enum Category {
   UNKNOWN = 0;  // неизвестная категория
   ENGINE = 1;   // двигатель
@@ -22,6 +23,9 @@ enum Category {
   WING = 4;     // крыло
 }
 
+/**
+ * Размеры детали
+ */
 message Dimensions {
   double length = 1;  // длина в см
   double width = 2;   // ширина в см
@@ -29,12 +33,19 @@ message Dimensions {
   double weight = 4;  // вес в кг
 }
 
+
+/**
+ * Информация о производителе
+ */
 message Manufacturer {
   string name = 1;      // название
   string country = 2;   // страна производства
   string website = 3;   // сайт производителя
 }
 
+/**
+ * Значение для метаданных
+ */
 message Value {
   oneof value {
     string string_value = 1;  // строковое значение
@@ -44,6 +55,9 @@ message Value {
   }
 }
 
+/**
+ * Фильтр для поиска деталей
+ */
 message PartsFilter {
   repeated string uuids = 1;                    // список UUID'ов
   repeated string names = 2;                    // список имён
@@ -52,6 +66,9 @@ message PartsFilter {
   repeated string tags = 5;                     // список тегов
 }
 
+/**
+ * Деталь космического корабля
+ */
 message Part {
   string uuid = 1;                            // уникальный идентификатор детали
   string name = 2;                            // название детали
@@ -67,18 +84,30 @@ message Part {
   google.protobuf.Timestamp updated_at = 12;  // дата обновления
 }
 
+/**
+ * Запрос на получение детали
+ */
 message GetPartRequest {
   string uuid = 1;
 }
 
+/**
+ * Ответ с информацией о детали
+ */
 message GetPartResponse {
   Part part = 1;
 }
 
+/**
+ * Запрос на получение списка деталей
+ */
 message ListPartsRequest {
   PartsFilter filter = 1;
 }
 
+/**
+ * Ответ со списком деталей
+ */
 message ListPartsResponse {
   repeated Part parts = 1;
 }

@@ -8,6 +8,9 @@ service PaymentService {
   rpc PayOrder(PayOrderRequest) returns (PayOrderResponse);
 }
 
+/**
+ * Способ оплаты
+ */
 enum PaymentMethod {
   UNKNOWN = 0;          // неизвестный способ
   CARD = 1;             // банковская карта
@@ -16,12 +19,18 @@ enum PaymentMethod {
   INVESTOR_MONEY = 4;   // деньги инвестора (внутренний метод)
 }
 
+/**
+ * Запрос на оплату заказа
+ */
 message PayOrderRequest {
   string order_uuid = 1;              // UUID заказа
   string user_uuid = 2;               // UUID пользователя, который инициирует оплату
   PaymentMethod payment_method = 3;   // выбранный способ оплаты
 }
 
+/**
+ * Ответ с UUID транзакции оплаты
+ */
 message PayOrderResponse {
   string transaction_uuid = 1;        // UUID транзакции оплаты
 }
