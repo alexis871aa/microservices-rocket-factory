@@ -215,13 +215,13 @@ func (x *Manufacturer) GetWebsite() string {
 // Значение для метаданных
 type Value struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Types that are valid to be assigned to Value:
+	// Types that are valid to be assigned to Kind:
 	//
 	//	*Value_StringValue
 	//	*Value_Int64Value
 	//	*Value_DoubleValue
 	//	*Value_BoolValue
-	Value         isValue_Value `protobuf_oneof:"value"`
+	Kind          isValue_Kind `protobuf_oneof:"kind"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -256,16 +256,16 @@ func (*Value) Descriptor() ([]byte, []int) {
 	return file_inventory_v1_inventory_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Value) GetValue() isValue_Value {
+func (x *Value) GetKind() isValue_Kind {
 	if x != nil {
-		return x.Value
+		return x.Kind
 	}
 	return nil
 }
 
 func (x *Value) GetStringValue() string {
 	if x != nil {
-		if x, ok := x.Value.(*Value_StringValue); ok {
+		if x, ok := x.Kind.(*Value_StringValue); ok {
 			return x.StringValue
 		}
 	}
@@ -274,7 +274,7 @@ func (x *Value) GetStringValue() string {
 
 func (x *Value) GetInt64Value() int64 {
 	if x != nil {
-		if x, ok := x.Value.(*Value_Int64Value); ok {
+		if x, ok := x.Kind.(*Value_Int64Value); ok {
 			return x.Int64Value
 		}
 	}
@@ -283,7 +283,7 @@ func (x *Value) GetInt64Value() int64 {
 
 func (x *Value) GetDoubleValue() float64 {
 	if x != nil {
-		if x, ok := x.Value.(*Value_DoubleValue); ok {
+		if x, ok := x.Kind.(*Value_DoubleValue); ok {
 			return x.DoubleValue
 		}
 	}
@@ -292,15 +292,15 @@ func (x *Value) GetDoubleValue() float64 {
 
 func (x *Value) GetBoolValue() bool {
 	if x != nil {
-		if x, ok := x.Value.(*Value_BoolValue); ok {
+		if x, ok := x.Kind.(*Value_BoolValue); ok {
 			return x.BoolValue
 		}
 	}
 	return false
 }
 
-type isValue_Value interface {
-	isValue_Value()
+type isValue_Kind interface {
+	isValue_Kind()
 }
 
 type Value_StringValue struct {
@@ -319,13 +319,13 @@ type Value_BoolValue struct {
 	BoolValue bool `protobuf:"varint,4,opt,name=bool_value,json=boolValue,proto3,oneof"` // логическое значение
 }
 
-func (*Value_StringValue) isValue_Value() {}
+func (*Value_StringValue) isValue_Kind() {}
 
-func (*Value_Int64Value) isValue_Value() {}
+func (*Value_Int64Value) isValue_Kind() {}
 
-func (*Value_DoubleValue) isValue_Value() {}
+func (*Value_DoubleValue) isValue_Kind() {}
 
-func (*Value_BoolValue) isValue_Value() {}
+func (*Value_BoolValue) isValue_Kind() {}
 
 // *
 // Фильтр для поиска деталей
@@ -737,15 +737,15 @@ const file_inventory_v1_inventory_proto_rawDesc = "" +
 	"\fManufacturer\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\acountry\x18\x02 \x01(\tR\acountry\x12\x18\n" +
-	"\awebsite\x18\x03 \x01(\tR\awebsite\"\x9e\x01\n" +
+	"\awebsite\x18\x03 \x01(\tR\awebsite\"\x9d\x01\n" +
 	"\x05Value\x12#\n" +
 	"\fstring_value\x18\x01 \x01(\tH\x00R\vstringValue\x12!\n" +
 	"\vint64_value\x18\x02 \x01(\x03H\x00R\n" +
 	"int64Value\x12#\n" +
 	"\fdouble_value\x18\x03 \x01(\x01H\x00R\vdoubleValue\x12\x1f\n" +
 	"\n" +
-	"bool_value\x18\x04 \x01(\bH\x00R\tboolValueB\a\n" +
-	"\x05value\"\xbc\x01\n" +
+	"bool_value\x18\x04 \x01(\bH\x00R\tboolValueB\x06\n" +
+	"\x04kind\"\xbc\x01\n" +
 	"\vPartsFilter\x12\x14\n" +
 	"\x05uuids\x18\x01 \x03(\tR\x05uuids\x12\x14\n" +
 	"\x05names\x18\x02 \x03(\tR\x05names\x126\n" +

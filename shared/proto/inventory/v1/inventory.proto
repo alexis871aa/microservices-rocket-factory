@@ -47,7 +47,7 @@ message Manufacturer {
  * Значение для метаданных
  */
 message Value {
-  oneof value {
+  oneof kind {
     string string_value = 1;  // строковое значение
     int64 int64_value = 2;    // целое значение
     double double_value = 3;  // дробное значение
