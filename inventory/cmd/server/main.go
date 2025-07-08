@@ -166,8 +166,8 @@ func matchesUUIDs(part *inventoryV1.Part, uuids []string) bool {
 		return true
 	}
 
-	for _, uuid := range uuids {
-		if part.Uuid == uuid {
+	for _, filterId := range uuids {
+		if part.Uuid == filterId {
 			return true
 		}
 	}
