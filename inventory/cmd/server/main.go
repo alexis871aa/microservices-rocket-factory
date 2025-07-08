@@ -12,13 +12,12 @@ import (
 	"sync"
 	"syscall"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
@@ -155,74 +154,80 @@ func copyValue(original *inventoryV1.Value) *inventoryV1.Value {
 }
 
 func matchesFilter(part *inventoryV1.Part, filter *inventoryV1.PartsFilter) bool {
-	if len(filter.Uuids) > 0 {
-		found := false
-		for _, filterId := range filter.Uuids {
-			if part.Uuid == filterId {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+	return matchesUUIDs(part, filter.Uuids) &&
+		matchesNames(part, filter.Names) &&
+		matchesCategories(part, filter.Categories) &&
+		matchesCountries(part, filter.ManufacturerCountries) &&
+		matchesTags(part, filter.Tags)
+}
+
+func matchesUUIDs(part *inventoryV1.Part, uuids []string) bool {
+	if len(uuids) == 0 {
+		return true
 	}
 
-	if len(filter.Names) > 0 {
-		found := false
-		for _, name := range filter.Names {
-			if strings.Contains(strings.ToLower(part.Name), strings.ToLower(name)) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
+	for _, uuid := range uuids {
+		if part.Uuid == uuid {
+			return true
 		}
 	}
+	return false
+}
 
-	if len(filter.Categories) > 0 {
-		found := false
-		for _, category := range filter.Categories {
-			if part.Category == category {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
+func matchesNames(part *inventoryV1.Part, names []string) bool {
+	if len(names) == 0 {
+		return true
 	}
 
-	if len(filter.ManufacturerCountries) > 0 {
-		found := false
-		for _, mfc := range filter.ManufacturerCountries {
-			if part.Manufacturer.Country == mfc {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
+	partName := strings.ToLower(part.Name)
+	for _, name := range names {
+		if strings.Contains(partName, strings.ToLower(name)) {
+			return true
 		}
 	}
+	return false
+}
 
-	if len(filter.Tags) > 0 {
-		found := false
-		for _, tag := range filter.Tags {
-			for _, partTag := range part.Tags {
-				if strings.Contains(strings.ToLower(partTag), strings.ToLower(tag)) {
-					found = true
-					break
-				}
-			}
-		}
-		if !found {
-			return false
-		}
+func matchesCategories(part *inventoryV1.Part, categories []inventoryV1.Category) bool {
+	if len(categories) == 0 {
+		return true
 	}
 
-	return true
+	for _, category := range categories {
+		if part.Category == category {
+			return true
+		}
+	}
+	return false
+}
+
+func matchesCountries(part *inventoryV1.Part, countries []string) bool {
+	if len(countries) == 0 {
+		return true
+	}
+
+	for _, country := range countries {
+		if part.Manufacturer.Country == country {
+			return true
+		}
+	}
+	return false
+}
+
+func matchesTags(part *inventoryV1.Part, tags []string) bool {
+	if len(tags) == 0 {
+		return true
+	}
+
+	for _, tag := range tags {
+		lowerTag := strings.ToLower(tag)
+		for _, partTag := range part.Tags {
+			if strings.Contains(strings.ToLower(partTag), lowerTag) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func main() {
