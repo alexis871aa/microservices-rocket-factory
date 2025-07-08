@@ -12,6 +12,7 @@ vars:
   OGEN_VERSION: 'v1.12.0'
   YQ_VERSION: 'v4.45.2'
   GRPCURL_VERSION: 'v1.9.3'
+  CURL_VERSION: 'v0.9.2'
 
   BIN_DIR: '{{.ROOT_DIR}}/bin'
   GOLANGCI_LINT: '{{.BIN_DIR}}/golangci-lint'
@@ -23,6 +24,7 @@ vars:
   PROTOC_GEN_GO: '{{.BIN_DIR}}/protoc-gen-go'
   PROTOC_GEN_GO_GRPC: '{{.BIN_DIR}}/protoc-gen-go-grpc'
   GRPCURL: '{{.BIN_DIR}}/grpcurl'
+  CURL: '{{.BIN_DIR}}/curl'
 
   NODE_MODULES_DIR: '{{.ROOT_DIR}}/node_modules/.bin'
   REDOCLY: '{{.NODE_MODULES_DIR}}/redocly'
@@ -84,7 +86,7 @@ tasks:
         for module in {{.MODULES}}; do
           if [ -d "$module" ]; then
             echo "🎯 Сортируем импорты в $module"
-            find $module -type f -name '*.go' ! -path '*/mocks/*' -exec {{.GCI}} write -s standard -s default -s "prefix(github.com/olezhek28/microservices-course-olezhek-solution)" {} +
+            find $module -type f -name '*.go' ! -path '*/mocks/*' -exec {{.GCI}} write -s standard -s default -s "prefix(github.com/alexis871aa/microservices-rocket-factory)" {} +
           fi
         done
 
@@ -261,9 +263,20 @@ tasks:
     status:
       - test -x {{.GRPCURL}}
 
+  curl:install:
+    desc: "Устанавливает curl в каталог bin"
+    cmds:
+      - |
+        [ -f {{.CURL}} ] || {
+          echo '📦 Устанавливаем curl {{.CURL_VERSION}}...'
+          GOBIN={{.BIN_DIR}} go install github.com/cdwiegand/go-curling@{{.CURL_VERSION}}
+        }
+    status:
+      - test -x {{.CURL}}
+
   test-api:
     desc: "🧪 Запуск тестов для проверки API микросервисов"
-    deps: [ grpcurl:install ]
+    deps: [ grpcurl:install, curl:install ]
     cmds:
       - |
         echo "🧪 Тестирование API микросервисов через gRPC и REST"
@@ -367,7 +380,7 @@ tasks:
         echo "💰 Тест 6: Оплата заказа (REST API)"
         PAY_RESPONSE=$(curl -s -X POST "http://localhost:8080/api/v1/orders/$ORDER_UUID/pay" \
           -H "Content-Type: application/json" \
-          -d "{\"payment_method\":\"PAYMENT_METHOD_CARD\"}")
+          -d "{\"payment_method\":\"CARD\"}")
         
         if [[ "$PAY_RESPONSE" == *"error"* ]]; then
           echo "❌ Ошибка при оплате заказа."
