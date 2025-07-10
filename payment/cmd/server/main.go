@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -9,6 +10,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -21,6 +23,19 @@ type paymentService struct {
 	paymentV1.UnimplementedPaymentServiceServer
 
 	mu sync.RWMutex
+}
+
+func (s *paymentService) PayOrder(_ context.Context, req *paymentV1.PayOrderRequest) (*paymentV1.PayOrderResponse, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	transactionUuid := uuid.NewString()
+
+	log.Printf("Оплата прошла успешно, transaction_uuid: %s", transactionUuid)
+
+	return &paymentV1.PayOrderResponse{
+		TransactionUuid: transactionUuid,
+	}, nil
 }
 
 func main() {
