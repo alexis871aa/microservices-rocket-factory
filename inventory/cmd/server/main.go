@@ -254,7 +254,7 @@ func main() {
 	reflection.Register(s)
 
 	go func() {
-		log.Printf("starting gRPC server on port %d", grpcPort)
+		log.Printf("starting InventoryService server on port %d", grpcPort)
 		err = s.Serve(lis)
 		if err != nil {
 			log.Fatalf("failed to serve: %v", err)
@@ -265,7 +265,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("🛑 Shutting down gRPC server...")
+	log.Println("🛑 Shutting down InventoryService server...")
 	s.GracefulStop()
 	log.Println("✅ Server stopped")
 }
