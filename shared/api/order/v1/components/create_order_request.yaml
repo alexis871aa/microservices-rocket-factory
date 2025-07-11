@@ -1,0 +1,15 @@
+type: object
+required:
+  - user_uuid
+  - part_uuids
+properties:
+  user_uuid:
+    type: string
+    description: Идентификатор пользователя
+    example: "b3e1c2d4-5f6a-7b8c-9d0e-1f2a3b4c5d6e"
+  part_uuids:
+    type: array
+    items:
+      type: string
+    description: Массив идентификаторов деталей
+    example: ["part-uuid-1", "part-uuid-2"]

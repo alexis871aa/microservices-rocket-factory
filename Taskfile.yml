@@ -26,13 +26,7 @@ vars:
   GRPCURL: '{{.BIN_DIR}}/grpcurl'
   CURL: '{{.BIN_DIR}}/curl'
 
-  NODE_MODULES_DIR: '{{.ROOT_DIR}}/node_modules/.bin'
-  REDOCLY: '{{.NODE_MODULES_DIR}}/redocly'
-
   OPEN_API_ORDER_V1_BASE: '{{.ROOT_DIR}}/shared/api/order/v1/order.openapi.yaml'
-  OPEN_API_ORDER_V1_BUNDLE: '{{.ROOT_DIR}}/shared/api/bundles/order.openapi.v1.bundle.yaml'
-
-  OPEN_API_FILES: '{{.ROOT_DIR}}/shared/api/bundles'
 
   MODULES: assembly inventory order payment platform iam notification
 
@@ -59,7 +53,6 @@ tasks:
     status:
       - test -x {{.GOFUMPT}}
       - test -x {{.GCI}}
-
   format:
     desc: "Форматирует весь проект gofumpt + gci, исключая mocks"
     summary: |
@@ -106,7 +99,6 @@ tasks:
         }
     status:
       - test -x {{.GOLANGCI_LINT}}
-
   lint:
     desc: "Запускает golangci-lint для всех модулей"
     summary: |
@@ -161,40 +153,18 @@ tasks:
           GOBIN={{.BIN_DIR}} go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@{{.PROTOC_GEN_GO_GRPC_VERSION}}
         }
 
-  proto:gen:
-    deps: [ install-buf, proto:install-plugins, proto:lint ]
-    desc: Генерация Go-кода из .proto
-    dir: shared/proto
-    cmds:
-      - '{{.BUF}} generate'
-
   proto:lint:
     deps: [ install-buf, proto:install-plugins ]
     desc: Проверка .proto-файлов на соответствие стилю
     dir: shared/proto
     cmds:
       - '{{.BUF}} lint'
-
-  redocly-cli:install:
-    desc: Установить локально Redocly CLI
+  proto:gen:
+    deps: [ install-buf, proto:install-plugins, proto:lint ]
+    desc: Генерация Go-кода из .proto
+    dir: shared/proto
     cmds:
-      - |
-        [ -f {{.REDOCLY}} ] || {
-          npm ci
-        }
-
-  redocly-cli:order-v1-bundle:
-    desc: Собрать OpenAPI в один файл через локальный redocly
-    deps: [ redocly-cli:install ]
-    cmds:
-      - '{{.REDOCLY}} bundle {{.OPEN_API_ORDER_V1_BASE}} -o {{.OPEN_API_ORDER_V1_BUNDLE}}'
-
-  redocly-cli:bundle:
-    desc: Собрать все схемы OpenAPI в общие файлы через локальный redocly
-    deps: [ redocly-cli:install ]
-    cmds:
-      - task: redocly-cli:order-v1-bundle
-
+      - '{{.BUF}} generate'
   ogen:install:
     desc: "Скачивает ogen в папку bin"
     cmds:
@@ -204,33 +174,36 @@ tasks:
           GOBIN={{.BIN_DIR}} go install github.com/ogen-go/ogen/cmd/ogen@{{.OGEN_VERSION}}
         }
 
+  yq:install:
+    desc: "Устанавливает yq в bin/ при необходимости"
+    cmds:
+      - |
+        [ -f {{.YQ}} ] || {
+          echo '📦 Installing yq...'
+          GOBIN={{.BIN_DIR}} go install github.com/mikefarah/yq/v4@{{.YQ_VERSION}}
+        }
+
   ogen:gen:
     desc: "Генерация Go-кода из всех OpenAPI-деклараций с x-ogen"
     deps: [ ogen:install, yq:install ]
     cmds:
-      - task: redocly-cli:bundle
       - |
-        find {{.OPEN_API_FILES}} -name '*.yaml' -o -name '*.yml' | while read -r file; do
-          if [ -f "$file" ] && grep -q 'x-ogen:' "$file"; then
-            echo "🚀 Generating from: $file"
-            target=$({{.YQ}} e '."x-ogen".target' "$file")
-            package=$({{.YQ}} e '."x-ogen".package' "$file")
-            echo "📁 Target: $target"
-            echo "📦 Package: $package"
-            {{.OGEN}} \
-              --target "$target" \
-              --package "$package" \
-              --clean \
-              "$file" || exit 1
-          fi
-        done
+        target=$({{.YQ}} e '."x-ogen".target' {{.OPEN_API_ORDER_V1_BASE}})
+        package=$({{.YQ}} e '."x-ogen".package' {{.OPEN_API_ORDER_V1_BASE}})
+        echo "📁 Target: $target"
+        echo "📦 Package: $package"
+        {{.OGEN}} --target "$target" --package "$package" --clean {{.OPEN_API_ORDER_V1_BASE}} || exit 1
 
   gen:
     desc: "Генерация всех proto и OpenAPI деклараций"
     cmds:
       - task: proto:gen
       - task: ogen:gen
-
+  format&lint:
+    desc: "Запускает format и lint для всех модулей"
+    cmds:
+      - task: format
+      - task: lint
   deps:update:
     desc: "Обновление зависимостей в go.mod во всех модулях"
     cmds:
@@ -243,15 +216,6 @@ tasks:
           fi
         done
 
-  yq:install:
-    desc: "Устанавливает yq в bin/ при необходимости"
-    cmds:
-      - |
-        [ -f {{.YQ}} ] || {
-          echo '📦 Installing yq...'
-          GOBIN={{.BIN_DIR}} go install github.com/mikefarah/yq/v4@{{.YQ_VERSION}}
-        }
-
   grpcurl:install:
     desc: "Устанавливает grpcurl в каталог bin"
     cmds:
@@ -262,7 +226,6 @@ tasks:
         }
     status:
       - test -x {{.GRPCURL}}
-
   curl:install:
     desc: "Устанавливает curl в каталог bin"
     cmds:
@@ -273,7 +236,6 @@ tasks:
         }
     status:
       - test -x {{.CURL}}
-
   test-api:
     desc: "🧪 Запуск тестов для проверки API микросервисов"
     deps: [ grpcurl:install, curl:install ]

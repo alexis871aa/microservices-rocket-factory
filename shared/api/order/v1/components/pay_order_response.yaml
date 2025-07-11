@@ -1,0 +1,8 @@
+type: object
+required:
+  - transaction_uuid
+properties:
+  transaction_uuid:
+    type: string
+    description: Идентификатор транзакции
+    example: "b3e1c2d4-5f6a-7b8c-9d0e-1f2a3b4c5d6e"
