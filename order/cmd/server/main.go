@@ -304,7 +304,7 @@ func main() {
 
 	orderServer, err := orderV1.NewServer(orderHandler)
 	if err != nil {
-		log.Fatalf("ошибка создания сервера OpenAPI: %v", err)
+		log.Printf("ошибка создания сервера OpenAPI: %v", err)
 	}
 
 	r := chi.NewRouter()
