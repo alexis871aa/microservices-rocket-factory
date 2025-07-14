@@ -301,7 +301,7 @@ func main() {
 		return
 	}
 	defer func() {
-		if perr := inventoryConn.Close(); perr != nil {
+		if perr := paymentConn.Close(); perr != nil {
 			log.Printf("failed to close payment connection: %v\n", perr)
 		}
 	}()
