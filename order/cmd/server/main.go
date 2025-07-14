@@ -320,7 +320,7 @@ func main() {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(10 * time.Second))
+	r.Use(middleware.Timeout(2 * time.Second))
 	r.Use(customMiddleware.RequestLogger)
 
 	r.Mount("/", orderServer)
