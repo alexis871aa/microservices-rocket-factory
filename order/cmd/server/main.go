@@ -32,6 +32,8 @@ const (
 	// Таймауты для HTTP-сервера
 	readHeaderTimeout = 5 * time.Second
 	shutdownTimeout   = 10 * time.Second
+	inventoryTimeout  = 5 * time.Second
+	paymentTimeout    = 3 * time.Second
 )
 
 // OrderStorage представляет потокобезопасное хранилище данных о заказах
@@ -105,7 +107,10 @@ func NewOrderHandler(storage *OrderStorage, inventoryClient inventoryV1.Inventor
 }
 
 func (h *OrderHandler) CreateOrder(ctx context.Context, req *orderV1.CreateOrderRequest) (orderV1.CreateOrderRes, error) {
-	resp, err := h.inventoryClient.ListParts(ctx, &inventoryV1.ListPartsRequest{
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, inventoryTimeout)
+	defer cancel()
+
+	resp, err := h.inventoryClient.ListParts(ctxWithTimeout, &inventoryV1.ListPartsRequest{
 		Filter: &inventoryV1.PartsFilter{
 			Uuids: req.PartUuids,
 		},
@@ -170,6 +175,9 @@ func convertPaymentMethod(orderMethod orderV1.PaymentMethod) paymentV1.PaymentMe
 }
 
 func (h *OrderHandler) PaymentOrder(ctx context.Context, req *orderV1.PayOrderRequest, params orderV1.PaymentOrderParams) (orderV1.PaymentOrderRes, error) {
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, paymentTimeout)
+	defer cancel()
+
 	order, err := h.storage.GetOrder(params.OrderUUID)
 	if err != nil {
 		return &orderV1.NotFoundError{
@@ -178,7 +186,7 @@ func (h *OrderHandler) PaymentOrder(ctx context.Context, req *orderV1.PayOrderRe
 		}, nil
 	}
 
-	resp, err := h.paymentClient.PayOrder(ctx, &paymentV1.PayOrderRequest{
+	resp, err := h.paymentClient.PayOrder(ctxWithTimeout, &paymentV1.PayOrderRequest{
 		OrderUuid:     order.OrderUUID,
 		UserUuid:      order.UserUUID,
 		PaymentMethod: convertPaymentMethod(req.PaymentMethod),
