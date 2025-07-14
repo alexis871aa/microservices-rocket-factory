@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/google/uuid"
@@ -21,8 +20,6 @@ const grpcPort = 50052
 
 type paymentService struct {
 	paymentV1.UnimplementedPaymentServiceServer
-
-	mu sync.RWMutex
 }
 
 func (s *paymentService) PayOrder(_ context.Context, req *paymentV1.PayOrderRequest) (*paymentV1.PayOrderResponse, error) {
