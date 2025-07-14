@@ -75,7 +75,8 @@ func (s *ConflictError) SetMessage(val string) {
 	s.Message = val
 }
 
-func (*ConflictError) cancelOrderRes() {}
+func (*ConflictError) cancelOrderRes()  {}
+func (*ConflictError) paymentOrderRes() {}
 
 // Ref: #
 type CreateOrderRequest struct {

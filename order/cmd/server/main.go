@@ -187,6 +187,26 @@ func (h *OrderHandler) PaymentOrder(ctx context.Context, req *orderV1.PayOrderRe
 		}, nil
 	}
 
+	if order.Status != orderV1.OrderStatusPENDINGPAYMENT {
+		switch order.Status {
+		case orderV1.OrderStatusPAID:
+			return &orderV1.ConflictError{
+				Code:    409,
+				Message: "заказ уже оплачен",
+			}, nil
+		case orderV1.OrderStatusCANCELLED:
+			return &orderV1.ConflictError{
+				Code:    409,
+				Message: "нельзя оплатить отмененный заказ",
+			}, nil
+		default:
+			return &orderV1.ConflictError{
+				Code:    409,
+				Message: "заказ не может быть оплачен в текущем статусе",
+			}, nil
+		}
+	}
+
 	resp, err := h.paymentClient.PayOrder(ctxWithTimeout, &paymentV1.PayOrderRequest{
 		OrderUuid:     order.OrderUUID,
 		UserUuid:      order.UserUUID,
