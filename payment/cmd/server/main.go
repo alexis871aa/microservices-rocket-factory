@@ -26,9 +26,6 @@ type paymentService struct {
 }
 
 func (s *paymentService) PayOrder(_ context.Context, req *paymentV1.PayOrderRequest) (*paymentV1.PayOrderResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
 	transactionUuid := uuid.NewString()
 
 	log.Printf("Оплата прошла успешно, transaction_uuid: %s", transactionUuid)

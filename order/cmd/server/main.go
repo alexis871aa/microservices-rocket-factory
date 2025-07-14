@@ -32,8 +32,9 @@ const (
 	// Таймауты для HTTP-сервера
 	readHeaderTimeout = 5 * time.Second
 	shutdownTimeout   = 10 * time.Second
-	inventoryTimeout  = 5 * time.Second
-	paymentTimeout    = 3 * time.Second
+	// Таймауты для внешних сервисов
+	inventoryTimeout = 5 * time.Second
+	paymentTimeout   = 3 * time.Second
 )
 
 // OrderStorage представляет потокобезопасное хранилище данных о заказах
