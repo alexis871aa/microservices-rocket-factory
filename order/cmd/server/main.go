@@ -241,14 +241,18 @@ func (h *OrderHandler) CancelOrder(_ context.Context, params orderV1.CancelOrder
 		}, nil
 	}
 
-	if order.Status == orderV1.OrderStatusPAID {
+	switch order.Status {
+	case orderV1.OrderStatusPAID:
 		return &orderV1.ConflictError{
 			Code:    409,
 			Message: "заказ уже оплачен и не может быть отменён",
 		}, nil
-	}
-
-	if order.Status == orderV1.OrderStatusPENDINGPAYMENT {
+	case orderV1.OrderStatusCANCELLED:
+		return &orderV1.ConflictError{
+			Code:    409,
+			Message: "",
+		}, nil
+	case orderV1.OrderStatusPENDINGPAYMENT:
 		order.Status = orderV1.OrderStatusCANCELLED
 		err = h.storage.UpdateOrder(params.OrderUUID, order)
 		if err != nil {
@@ -257,14 +261,13 @@ func (h *OrderHandler) CancelOrder(_ context.Context, params orderV1.CancelOrder
 				Message: "ошибка при отмене заказа",
 			}, nil
 		}
-
 		return &orderV1.CancelOrderNoContent{}, nil
+	default:
+		return &orderV1.ConflictError{
+			Code:    409,
+			Message: "заказ в неподдерживаемом статусе",
+		}, nil
 	}
-
-	return &orderV1.ConflictError{
-		Code:    409,
-		Message: "заказ не может быть отменён",
-	}, nil
 }
 
 func (h *OrderHandler) NewError(_ context.Context, err error) *orderV1.GenericErrorStatusCode {
