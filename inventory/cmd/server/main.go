@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 
@@ -154,77 +153,20 @@ func copyValue(original *inventoryV1.Value) *inventoryV1.Value {
 }
 
 func matchesFilter(part *inventoryV1.Part, filter *inventoryV1.PartsFilter) bool {
-	return matchesUUIDs(part, filter.Uuids) &&
-		matchesNames(part, filter.Names) &&
-		matchesCategories(part, filter.Categories) &&
-		matchesCountries(part, filter.ManufacturerCountries) &&
-		matchesTags(part, filter.Tags)
+	return matchesBy(part, filter.Uuids, func(part *inventoryV1.Part) string { return part.Uuid }) &&
+		matchesBy(part, filter.Names, func(part *inventoryV1.Part) string { return part.Name }) &&
+		matchesBy(part, filter.Categories, func(part *inventoryV1.Part) inventoryV1.Category { return part.Category }) &&
+		matchesBy(part, filter.ManufacturerCountries, func(part *inventoryV1.Part) string { return part.Manufacturer.Country })
 }
 
-func matchesUUIDs(part *inventoryV1.Part, uuids []string) bool {
-	if len(uuids) == 0 {
+func matchesBy[T comparable](part *inventoryV1.Part, filter []T, get func(part *inventoryV1.Part) T) bool {
+	if len(filter) == 0 {
 		return true
 	}
 
-	for _, filterId := range uuids {
-		if part.Uuid == filterId {
+	for _, filterValue := range filter {
+		if get(part) == filterValue {
 			return true
-		}
-	}
-	return false
-}
-
-func matchesNames(part *inventoryV1.Part, names []string) bool {
-	if len(names) == 0 {
-		return true
-	}
-
-	partName := strings.ToLower(part.Name)
-	for _, name := range names {
-		if strings.Contains(partName, strings.ToLower(name)) {
-			return true
-		}
-	}
-	return false
-}
-
-func matchesCategories(part *inventoryV1.Part, categories []inventoryV1.Category) bool {
-	if len(categories) == 0 {
-		return true
-	}
-
-	for _, category := range categories {
-		if part.Category == category {
-			return true
-		}
-	}
-	return false
-}
-
-func matchesCountries(part *inventoryV1.Part, countries []string) bool {
-	if len(countries) == 0 {
-		return true
-	}
-
-	for _, country := range countries {
-		if part.Manufacturer.Country == country {
-			return true
-		}
-	}
-	return false
-}
-
-func matchesTags(part *inventoryV1.Part, tags []string) bool {
-	if len(tags) == 0 {
-		return true
-	}
-
-	for _, tag := range tags {
-		lowerTag := strings.ToLower(tag)
-		for _, partTag := range part.Tags {
-			if strings.Contains(strings.ToLower(partTag), lowerTag) {
-				return true
-			}
 		}
 	}
 	return false
