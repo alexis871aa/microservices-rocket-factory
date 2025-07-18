@@ -6,7 +6,7 @@ import (
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/converter"
 )
 
-func (r *repository) List(_ context.Context, filter model.PartsFilter) (model.PartsInfoFilter, error) {
+func (r *repository) ListParts(_ context.Context, filter model.PartsFilter) (model.PartsInfoFilter, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

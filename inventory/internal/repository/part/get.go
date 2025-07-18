@@ -7,7 +7,7 @@ import (
 	repoConverter "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/converter"
 )
 
-func (r *repository) Get(_ context.Context, uuid string) (model.PartInfo, error) {
+func (r *repository) GetPart(_ context.Context, uuid string) (model.PartInfo, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

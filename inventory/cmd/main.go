@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	partRepository "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/part"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
 
@@ -185,6 +186,9 @@ func main() {
 	}()
 
 	s := grpc.NewServer()
+
+	// Регистрируем наш сервис
+	repo := partRepository.NewRepository()
 
 	service := &inventoryService{
 		parts: make(map[string]*inventoryV1.Part),
