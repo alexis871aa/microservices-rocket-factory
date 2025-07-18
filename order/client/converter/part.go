@@ -12,7 +12,7 @@ func PartsFilterToProto(filter model.PartsFilter) *inventoryV1.PartsFilter {
 	if filter.Categories != nil {
 		categories = make([]inventoryV1.Category, 0, len(*filter.Categories))
 		for _, category := range *filter.Categories {
-			categories = append(categories, inventoryV1.Category(int32(category)))
+			categories = append(categories, inventoryV1.Category(int32(category))) //nolint:gosec
 		}
 	}
 

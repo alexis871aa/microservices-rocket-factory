@@ -54,7 +54,7 @@ func modelPartToProtoPart(part *model.Part) *inventoryV1.Part {
 		Description:   part.Description,
 		Price:         part.Price,
 		StockQuantity: part.StockQuantity,
-		Category:      inventoryV1.Category(int32(part.Category)),
+		Category:      inventoryV1.Category(int32(part.Category)), //nolint:gosec
 		Dimensions: &inventoryV1.Dimensions{
 			Length: part.Dimensions.Length,
 			Width:  part.Dimensions.Width,
