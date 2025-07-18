@@ -11,7 +11,7 @@ import (
 	repoModel "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/model"
 )
 
-func (r *repository) initParts() {
+func (r *repository) InitParts() {
 	parts := generateParts()
 
 	for _, part := range parts {
