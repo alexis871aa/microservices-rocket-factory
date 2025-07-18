@@ -64,18 +64,51 @@ func PartsInfoFilterToProto(info *model.PartsInfoFilter) *inventoryV1.ListPartsR
 	}
 
 	var parts []*inventoryV1.Part
-	for _, part := range parts {
+	for _, part := range info.Parts {
+		var tags []string
+		if part.Tags != nil {
+			tags = *part.Tags
+		}
+
+		var meta map[string]*inventoryV1.Value
+		if part.Metadata != nil {
+			meta = lo.MapEntries(part.Metadata, func(k string, v model.Value) (string, *inventoryV1.Value) {
+				return k, ModelValueToProto(&v)
+			})
+		}
+
+		var createdAtProto *timestamppb.Timestamp
+		if part.CreatedAt != nil {
+			createdAtProto = timestamppb.New(*part.CreatedAt)
+		}
+
+		var updatedAtProto *timestamppb.Timestamp
+		if part.UpdatedAt != nil {
+			updatedAtProto = timestamppb.New(*part.UpdatedAt)
+		}
+
 		parts = append(parts, &inventoryV1.Part{
 			Uuid:          part.Uuid,
 			Name:          part.Name,
 			Description:   part.Description,
 			Price:         part.Price,
 			StockQuantity: part.StockQuantity,
-			Category:      part.Category,
-			Dimensions:    part.Dimensions,
-			Metadata:      part.Metadata,
-			CreatedAt:     part.CreatedAt,
-			UpdatedAt:     part.UpdatedAt,
+			Category:      inventoryV1.Category(part.Category),
+			Dimensions: &inventoryV1.Dimensions{
+				Length: part.Dimensions.Length,
+				Width:  part.Dimensions.Width,
+				Height: part.Dimensions.Height,
+				Weight: part.Dimensions.Weight,
+			},
+			Manufacturer: &inventoryV1.Manufacturer{
+				Name:    part.Manufacturer.Name,
+				Country: part.Manufacturer.Country,
+				Website: part.Manufacturer.Website,
+			},
+			Tags:      tags,
+			Metadata:  meta,
+			CreatedAt: createdAtProto,
+			UpdatedAt: updatedAtProto,
 		})
 	}
 
@@ -126,7 +159,7 @@ func ProtoToPartsFilter(p *inventoryV1.PartsFilter) *model.PartsFilter {
 	var uuids, names, manufacturerCountries, tags *[]string
 	var categories *[]model.Category
 
-	if len(p.Uuids) < 0 {
+	if len(p.Uuids) > 0 {
 		uuids = &p.Uuids
 	}
 	if len(p.Names) > 0 {

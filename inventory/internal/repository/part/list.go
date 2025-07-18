@@ -2,6 +2,7 @@ package part
 
 import (
 	"context"
+
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/model"
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/converter"
 )
@@ -56,10 +57,9 @@ func matchesFilter(part model.Part, filter model.PartsFilter) bool {
 }
 
 func matchesBy[T comparable](part model.Part, filter *[]T, get func(part model.Part) T) bool {
-	if len(*filter) == 0 {
+	if filter == nil || len(*filter) == 0 {
 		return true
 	}
-
 	for _, filterValue := range *filter {
 		if get(part) == filterValue {
 			return true
