@@ -15,5 +15,5 @@ func (a *api) ListParts(ctx context.Context, req *inventoryV1.ListPartsRequest) 
 		return &inventoryV1.ListPartsResponse{}, err
 	}
 
-	return converter.PartsInfoFilterToProto(&parts), nil
+	return converter.PartsToProto(parts), nil
 }

@@ -8,23 +8,40 @@ import (
 )
 
 func PartsFilterToProto(filter model.PartsFilter) *inventoryV1.PartsFilter {
-	categories := make([]inventoryV1.Category, 0, len(*filter.Categories))
-	for _, category := range *filter.Categories {
-		categories = append(categories, inventoryV1.Category(category))
+	var categories []inventoryV1.Category
+	if filter.Categories != nil {
+		categories = make([]inventoryV1.Category, 0, len(*filter.Categories))
+		for _, category := range *filter.Categories {
+			categories = append(categories, inventoryV1.Category(category))
+		}
+	}
+
+	var uuids, names, manufacturerCountries, tags []string
+	if filter.Uuids != nil {
+		uuids = *filter.Uuids
+	}
+	if filter.Names != nil {
+		names = *filter.Names
+	}
+	if filter.ManufacturerCountries != nil {
+		manufacturerCountries = *filter.ManufacturerCountries
+	}
+	if filter.Tags != nil {
+		tags = *filter.Tags
 	}
 
 	return &inventoryV1.PartsFilter{
-		Uuids:                 *filter.Uuids,
-		Names:                 *filter.Names,
+		Uuids:                 uuids,
+		Names:                 names,
 		Categories:            categories,
-		ManufacturerCountries: *filter.ManufacturerCountries,
-		Tags:                  *filter.Tags,
+		ManufacturerCountries: manufacturerCountries,
+		Tags:                  tags,
 	}
 }
 
-func PartListToModel(r *inventoryV1.ListPartsResponse) model.PartsInfoFilter {
+func PartListToModel(r *inventoryV1.ListPartsResponse) []model.Part {
 	if r == nil {
-		return model.PartsInfoFilter{}
+		return []model.Part{}
 	}
 
 	var parts []model.Part
@@ -67,9 +84,7 @@ func PartListToModel(r *inventoryV1.ListPartsResponse) model.PartsInfoFilter {
 		})
 	}
 
-	return model.PartsInfoFilter{
-		Parts: parts,
-	}
+	return parts
 }
 
 func protoValueToModel(v *inventoryV1.Value) model.Value {

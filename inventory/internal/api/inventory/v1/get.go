@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/converter"
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/model"
 	"github.com/go-faster/errors"
@@ -20,5 +21,5 @@ func (a *api) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*in
 		return nil, err
 	}
 
-	return converter.PartInfoToProto(&part), nil
+	return converter.PartToProto(&part), nil
 }

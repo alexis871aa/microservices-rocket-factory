@@ -54,11 +54,3 @@ type PartsFilter struct {
 	ManufacturerCountries *[]string
 	Tags                  *[]string
 }
-
-type PartInfo struct {
-	Part Part
-}
-
-type PartsInfoFilter struct {
-	Parts []Part
-}

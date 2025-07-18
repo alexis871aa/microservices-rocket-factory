@@ -8,112 +8,68 @@ import (
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
 
-func PartInfoToProto(info *model.PartInfo) *inventoryV1.GetPartResponse {
+func PartToProto(part *model.Part) *inventoryV1.GetPartResponse {
+	return &inventoryV1.GetPartResponse{
+		Part: modelPartToProtoPart(part),
+	}
+}
+
+func PartsToProto(parts []model.Part) *inventoryV1.ListPartsResponse {
+	protoParts := make([]*inventoryV1.Part, 0, len(parts))
+	for _, part := range parts {
+		protoParts = append(protoParts, modelPartToProtoPart(&part))
+	}
+
+	return &inventoryV1.ListPartsResponse{
+		Parts: protoParts,
+	}
+}
+
+func modelPartToProtoPart(part *model.Part) *inventoryV1.Part {
 	var tags []string
-	if info.Part.Tags != nil {
-		tags = *info.Part.Tags
+	if part.Tags != nil {
+		tags = *part.Tags
 	}
 
 	var meta map[string]*inventoryV1.Value
-	if info.Part.Metadata != nil {
-		meta = lo.MapEntries(info.Part.Metadata, func(k string, v model.Value) (string, *inventoryV1.Value) {
+	if part.Metadata != nil {
+		meta = lo.MapEntries(part.Metadata, func(k string, v model.Value) (string, *inventoryV1.Value) {
 			return k, ModelValueToProto(&v)
 		})
 	}
 
 	var createdAtProto *timestamppb.Timestamp
-	if info.Part.CreatedAt != nil {
-		createdAtProto = timestamppb.New(*info.Part.CreatedAt)
+	if part.CreatedAt != nil {
+		createdAtProto = timestamppb.New(*part.CreatedAt)
 	}
 
 	var updatedAtProto *timestamppb.Timestamp
-	if info.Part.UpdatedAt != nil {
-		updatedAtProto = timestamppb.New(*info.Part.UpdatedAt)
+	if part.UpdatedAt != nil {
+		updatedAtProto = timestamppb.New(*part.UpdatedAt)
 	}
 
-	return &inventoryV1.GetPartResponse{
-		Part: &inventoryV1.Part{
-			Uuid:          info.Part.Uuid,
-			Name:          info.Part.Name,
-			Description:   info.Part.Description,
-			Price:         info.Part.Price,
-			StockQuantity: info.Part.StockQuantity,
-			Category:      inventoryV1.Category(info.Part.Category),
-			Dimensions: &inventoryV1.Dimensions{
-				Length: info.Part.Dimensions.Length,
-				Width:  info.Part.Dimensions.Width,
-				Height: info.Part.Dimensions.Height,
-				Weight: info.Part.Dimensions.Weight,
-			},
-			Manufacturer: &inventoryV1.Manufacturer{
-				Name:    info.Part.Manufacturer.Name,
-				Country: info.Part.Manufacturer.Country,
-				Website: info.Part.Manufacturer.Website,
-			},
-			Tags:      tags,
-			Metadata:  meta,
-			CreatedAt: createdAtProto,
-			UpdatedAt: updatedAtProto,
+	return &inventoryV1.Part{
+		Uuid:          part.Uuid,
+		Name:          part.Name,
+		Description:   part.Description,
+		Price:         part.Price,
+		StockQuantity: part.StockQuantity,
+		Category:      inventoryV1.Category(part.Category),
+		Dimensions: &inventoryV1.Dimensions{
+			Length: part.Dimensions.Length,
+			Width:  part.Dimensions.Width,
+			Height: part.Dimensions.Height,
+			Weight: part.Dimensions.Weight,
 		},
-	}
-}
-
-func PartsInfoFilterToProto(info *model.PartsInfoFilter) *inventoryV1.ListPartsResponse {
-	if info == nil {
-		return &inventoryV1.ListPartsResponse{}
-	}
-
-	var parts []*inventoryV1.Part
-	for _, part := range info.Parts {
-		var tags []string
-		if part.Tags != nil {
-			tags = *part.Tags
-		}
-
-		var meta map[string]*inventoryV1.Value
-		if part.Metadata != nil {
-			meta = lo.MapEntries(part.Metadata, func(k string, v model.Value) (string, *inventoryV1.Value) {
-				return k, ModelValueToProto(&v)
-			})
-		}
-
-		var createdAtProto *timestamppb.Timestamp
-		if part.CreatedAt != nil {
-			createdAtProto = timestamppb.New(*part.CreatedAt)
-		}
-
-		var updatedAtProto *timestamppb.Timestamp
-		if part.UpdatedAt != nil {
-			updatedAtProto = timestamppb.New(*part.UpdatedAt)
-		}
-
-		parts = append(parts, &inventoryV1.Part{
-			Uuid:          part.Uuid,
-			Name:          part.Name,
-			Description:   part.Description,
-			Price:         part.Price,
-			StockQuantity: part.StockQuantity,
-			Category:      inventoryV1.Category(part.Category),
-			Dimensions: &inventoryV1.Dimensions{
-				Length: part.Dimensions.Length,
-				Width:  part.Dimensions.Width,
-				Height: part.Dimensions.Height,
-				Weight: part.Dimensions.Weight,
-			},
-			Manufacturer: &inventoryV1.Manufacturer{
-				Name:    part.Manufacturer.Name,
-				Country: part.Manufacturer.Country,
-				Website: part.Manufacturer.Website,
-			},
-			Tags:      tags,
-			Metadata:  meta,
-			CreatedAt: createdAtProto,
-			UpdatedAt: updatedAtProto,
-		})
-	}
-
-	return &inventoryV1.ListPartsResponse{
-		Parts: parts,
+		Manufacturer: &inventoryV1.Manufacturer{
+			Name:    part.Manufacturer.Name,
+			Country: part.Manufacturer.Country,
+			Website: part.Manufacturer.Website,
+		},
+		Tags:      tags,
+		Metadata:  meta,
+		CreatedAt: createdAtProto,
+		UpdatedAt: updatedAtProto,
 	}
 }
 

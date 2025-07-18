@@ -7,14 +7,14 @@ import (
 	repoConverter "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/converter"
 )
 
-func (r *repository) GetPart(_ context.Context, uuid string) (model.PartInfo, error) {
+func (r *repository) GetPart(_ context.Context, uuid string) (model.Part, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	repoPart, ok := r.data[uuid]
 	if !ok {
-		return model.PartInfo{}, model.ErrPartNotFound
+		return model.Part{}, model.ErrPartNotFound
 	}
 
-	return model.PartInfo{Part: repoConverter.PartToModel(repoPart)}, nil
+	return repoConverter.PartToModel(repoPart), nil
 }
