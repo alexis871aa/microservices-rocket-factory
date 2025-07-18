@@ -3,12 +3,12 @@ package v1
 import (
 	"context"
 
-	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/converter"
-	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/model"
 	"github.com/go-faster/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/converter"
+	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/model"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
 

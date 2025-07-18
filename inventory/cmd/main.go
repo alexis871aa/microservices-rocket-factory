@@ -8,12 +8,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	partV1API "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/api/inventory/v1"
 	partRepository "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/part"
 	partService "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service/part"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 const grpcPort = 50051

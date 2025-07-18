@@ -13,5 +13,5 @@ const (
 )
 
 type PaymentService interface {
-	PayOrder(ctx context.Context, orderUUID string, userUUID string, paymentMethod PaymentMethod) (string, error)
+	PayOrder(ctx context.Context, orderUUID, userUUID string, paymentMethod PaymentMethod) (string, error)
 }
