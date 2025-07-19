@@ -1,7 +1,7 @@
 package v1
 
 import (
-	def "github.com/alexis871aa/microservices-rocket-factory/order/client/grpc"
+	def "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc"
 	generatedPaymentV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/payment/v1"
 )
 

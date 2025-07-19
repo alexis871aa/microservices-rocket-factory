@@ -2,8 +2,8 @@ package v1
 
 import (
 	"context"
+	"github.com/alexis871aa/microservices-rocket-factory/order/internal/client/converter"
 
-	"github.com/alexis871aa/microservices-rocket-factory/order/client/converter"
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
 	geteratedInventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
