@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
-	generatedPaymentV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/payment/v1"
 )
 
 type InventoryClient interface {
@@ -12,5 +11,5 @@ type InventoryClient interface {
 }
 
 type PaymentClient interface {
-	PayOrder(ctx context.Context, orderUUID, userUUID string, paymentMethod generatedPaymentV1.PaymentMethod) (string, error)
+	PayOrder(ctx context.Context, orderUUID, userUUID string, paymentMethod model.PaymentMethod) (string, error)
 }
