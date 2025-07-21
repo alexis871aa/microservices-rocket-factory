@@ -274,7 +274,7 @@ tasks:
         fi
 
         echo "🧪 Запуск тестов со сбором покрытия для всех модулей..."
-        go test -v -coverprofile={{.COVERAGE_DIR}}/coverage.out -coverpkg=$TARGET_PACKAGES ./inventory/... ./order/...
+        go test -v -coverprofile={{.COVERAGE_DIR}}/coverage.out -coverpkg=$TARGET_PACKAGES ./inventory/... ./order/... ./payment/...
 
         echo "🧾 Общее покрытие:"
         go tool cover -func={{.COVERAGE_DIR}}/coverage.out | tail -n1
