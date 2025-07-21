@@ -24,7 +24,7 @@ packages:
     config:
       include-regex: ".*Repository"
 
-  github.com/alexis871aa/microservices-rocket-factory/order/internal/client:
+  github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc:
     config:
       include-regex: ".*Client"
 
