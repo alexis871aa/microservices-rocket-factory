@@ -1,6 +1,6 @@
 # microservices-rocket-factory
 
-![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/olezhek28/bf33a2bda0693f1162c4323702033d27/raw/coverage.json)
+![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/alexis871aa/4cbdede79d6d29090e053a7c93192093/raw/coverage.json)
 
 Этот репозиторий содержит проект из курса [Микросервисы, как в BigTech 2.0](https://olezhek28.courses/microservices).
 
