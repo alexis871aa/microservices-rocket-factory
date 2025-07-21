@@ -13,6 +13,10 @@ import (
 const inventoryTimeout = 5 * time.Second
 
 func (s *service) Create(ctx context.Context, userUUID string, partUUIDs []string) (*model.Order, error) {
+	if len(partUUIDs) == 0 {
+		return nil, model.ErrPartsNotFound
+	}
+
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, inventoryTimeout)
 	defer cancel()
 

@@ -12,7 +12,7 @@ import (
 func (s *service) Cancel(ctx context.Context, orderUUID string) error {
 	order, err := s.Get(ctx, orderUUID)
 	if err != nil {
-		return model.ErrOrderNotFound
+		return err
 	}
 
 	switch order.Status {
