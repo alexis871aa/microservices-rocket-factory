@@ -31,7 +31,7 @@ jobs:
       go-version: ${{ needs.extract-vars.outputs.go-version }}
       golangci-lint-version: ${{ needs.extract-vars.outputs.golangci-lint-version }}
 
-  test:
+  test-coverage:
     uses: ./.github/workflows/test-reusable.yml
     needs: lint
     with:
