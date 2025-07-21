@@ -1,0 +1,2 @@
+// Code generated for Alex Sokolov service
+// © Alexey Sokolov 2025.
