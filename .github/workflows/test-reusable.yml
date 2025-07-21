@@ -31,4 +31,4 @@ jobs:
       - name: 🧪 Run unit tests via Taskfile
         env:
           MODULES: ${{ inputs.modules }}
-        run: task test
+        run: task test-coverage
