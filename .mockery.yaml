@@ -31,3 +31,11 @@ packages:
   github.com/alexis871aa/microservices-rocket-factory/payment/internal/service:
     config:
       include-regex: ".*Service"
+
+  github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1:
+    config:
+      include-regex: ".*ServiceClient"
+
+  github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/payment/v1:
+    config:
+      include-regex: ".*ServiceClient"
