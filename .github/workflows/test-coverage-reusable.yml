@@ -23,7 +23,7 @@ jobs:
 
     env:
       COVERAGE_DIR: coverage
-      COVERAGE_FILE: total.out
+      COVERAGE_FILE: coverage.out
 
     steps:
       - name: 📥 Checkout code
