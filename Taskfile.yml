@@ -59,6 +59,7 @@ tasks:
     status:
       - test -x {{.GOFUMPT}}
       - test -x {{.GCI}}
+
   format:
     desc: "Форматирует весь проект gofumpt + gci, исключая mocks"
     summary: |
@@ -105,6 +106,7 @@ tasks:
         }
     status:
       - test -x {{.GOLANGCI_LINT}}
+
   lint:
     desc: "Запускает golangci-lint для всех модулей"
     summary: |
@@ -165,12 +167,14 @@ tasks:
     dir: shared/proto
     cmds:
       - '{{.BUF}} lint'
+
   proto:gen:
     deps: [ install-buf, proto:install-plugins, proto:lint ]
     desc: Генерация Go-кода из .proto
     dir: shared/proto
     cmds:
       - '{{.BUF}} generate'
+
   ogen:install:
     desc: "Скачивает ogen в папку bin"
     cmds:
@@ -205,11 +209,13 @@ tasks:
     cmds:
       - task: proto:gen
       - task: ogen:gen
+
   format&lint:
     desc: "Запускает format и lint для всех модулей"
     cmds:
       - task: format
       - task: lint
+
   deps:update:
     desc: "Обновление зависимостей в go.mod во всех модулях"
     cmds:
@@ -232,6 +238,7 @@ tasks:
         }
     status:
       - test -x {{.GRPCURL}}
+
   curl:install:
     desc: "Устанавливает curl в каталог bin"
     cmds:
@@ -242,6 +249,7 @@ tasks:
         }
     status:
       - test -x {{.CURL}}
+
   mockery:install:
     desc: "Устанавливает mockery в ./bin"
     cmds:
@@ -252,6 +260,7 @@ tasks:
         }
     status:
       - test -x {{.MOCKERY}}
+
   mockery:gen:
     desc: "Генерирует моки интерфейсов с помощью mockery"
     deps: [ mockery:install ]
@@ -259,6 +268,7 @@ tasks:
       - |
         echo '🧪 Генерация моков...'
         {{.MOCKERY}}
+
   test-coverage:
     desc: "Тесты с покрытием бизнес-логики, автоматический поиск и анализ всех модулей"
     cmds:
@@ -280,6 +290,7 @@ tasks:
 
         echo "🧾 Общее покрытие:"
         go tool cover -func={{.COVERAGE_DIR}}/coverage.out | tail -n1
+
   coverage:html:
     desc: "Генерирует HTML-отчёт покрытия и открывает его в браузере"
     deps: [ test-coverage ]
@@ -304,42 +315,49 @@ tasks:
     cmds:
       - echo "[task] 🚀 Поднимаем core контейнеры"
       - docker compose up --build --detach
+
   down-core:
     desc:  Остановить и удалить core контейнеры
     dir: deploy/compose/core
     cmds:
       - echo "[task] 🛑 Останавливаем core контейнеры"
       - docker compose down --volumes
+
   up-inventory:
     desc: Поднять Inventory сервис и все его зависимости
     dir: deploy/compose/inventory
     cmds:
       - echo "[task] 📦 Поднимаем Inventory с зависимостями"
       - docker compose up --build --detach
+
   down-inventory:
     desc: Остановить и удалить Inventory сервис и все его зависимости
     dir: deploy/compose/inventory
     cmds:
       - echo "[task] 🛑 Останавливаем Inventory с зависимостями"
       - docker compose down --volumes
+
   up-order:
     desc: Поднять Order сервис и все его зависимости
     dir: deploy/compose/order
     cmds:
       - echo "[task] 📦 Поднимаем Order с зависимостями"
       - docker compose up --build --detach
+
   down-order:
     desc: Остановить и удалить Order сервис и все его зависимости
     dir: deploy/compose/order
     cmds:
       - echo "[task] 🛑 Останавливаем Order с зависимостями"
       - docker compose down --volumes
+
   up-all:
     desc: Поднять все сервисы по очереди вместе с зависимостями
     cmds:
       - task up-core
       - task up-inventory
       - task up-order
+
   down-all:
     desc: Остановить и удалить все сервисы по очереди вместе с зависимостями
     cmds:
