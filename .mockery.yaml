@@ -10,19 +10,11 @@ issue-845-fix: True
 packages:
   github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service:
     config:
-      include-regex: ".*Service"
-
-  github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository:
-    config:
-      include-regex: ".*Repository"
+      include-regex: ".*Service|.*Repository"
 
   github.com/alexis871aa/microservices-rocket-factory/order/internal/service:
     config:
-      include-regex: ".*Service"
-
-  github.com/alexis871aa/microservices-rocket-factory/order/internal/repository:
-    config:
-      include-regex: ".*Repository"
+      include-regex: ".*Service|.*Repository"
 
   github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc:
     config:
