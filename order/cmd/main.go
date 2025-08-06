@@ -39,6 +39,13 @@ const (
 )
 
 func main() {
+	ctx := context.Background()
+	enverr := godotenv.Load("../../.env")
+	if enverr != nil {
+		log.Printf("failed to load .env file: %v\n", enverr)
+		return
+	}
+
 	inventoryAddr := os.Getenv("INVENTORY_ADDR")
 	inventoryConn, err := grpc.NewClient(
 		inventoryAddr,
@@ -68,13 +75,6 @@ func main() {
 			log.Printf("failed to close payment connection: %v\n", perr)
 		}
 	}()
-
-	ctx := context.Background()
-	enverr := godotenv.Load(".env")
-	if enverr != nil {
-		log.Printf("failed to load .env file: %v\n", enverr)
-		return
-	}
 
 	dbURI := os.Getenv("DB_URI")
 	dbConn, conErr := pgx.Connect(ctx, dbURI)
