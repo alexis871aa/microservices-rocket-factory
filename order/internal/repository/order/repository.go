@@ -3,7 +3,7 @@ package order
 import (
 	"database/sql"
 
-	def "github.com/alexis871aa/microservices-rocket-factory/order/internal/repository"
+	def "github.com/alexis871aa/microservices-rocket-factory/order/internal/service"
 )
 
 var _ def.OrderRepository = (*repository)(nil)

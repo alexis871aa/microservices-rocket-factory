@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	def "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository"
+	def "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service"
 )
 
 var _ def.PartRepository = (*repository)(nil)

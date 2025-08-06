@@ -12,3 +12,10 @@ type OrderService interface {
 	Cancel(ctx context.Context, orderUUID string) error
 	Pay(ctx context.Context, orderUUID string, paymentMethod model.PaymentMethod) (string, error)
 }
+
+type OrderRepository interface {
+	Create(ctx context.Context, order model.Order) error
+	Get(ctx context.Context, orderUUID string) (*model.Order, error)
+	Update(ctx context.Context, orderUUID string, newOrder model.Order) error
+	Delete(ctx context.Context, orderUUID string) error
+}
