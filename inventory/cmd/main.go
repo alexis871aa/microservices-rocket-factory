@@ -38,7 +38,7 @@ func main() {
 	s := grpc.NewServer()
 
 	ctx := context.Background()
-	lerr := godotenv.Load(".env")
+	lerr := godotenv.Load("../../.env")
 	if lerr != nil {
 		log.Printf("failed to load .env file: %v\n", lerr)
 		return
