@@ -40,9 +40,17 @@ const (
 
 func main() {
 	ctx := context.Background()
-	enverr := godotenv.Load("../../.env")
+	envPaths := []string{"../../.env", "../.env", ".env"}
+	var enverr error
+	for _, path := range envPaths {
+		enverr = godotenv.Load(path)
+		if enverr == nil {
+			log.Printf("✅ Загружен .env файл: %s\n", path)
+			break
+		}
+	}
 	if enverr != nil {
-		log.Printf("failed to load .env file: %v\n", enverr)
+		log.Printf("❌ Не удалось найти .env файл: %v\n", enverr)
 		return
 	}
 

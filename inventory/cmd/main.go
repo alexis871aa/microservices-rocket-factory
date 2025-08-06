@@ -38,9 +38,17 @@ func main() {
 	s := grpc.NewServer()
 
 	ctx := context.Background()
-	lerr := godotenv.Load("../../.env")
+	envPaths := []string{"../../.env", "../.env", ".env"}
+	var lerr error
+	for _, path := range envPaths {
+		lerr = godotenv.Load(path)
+		if lerr == nil {
+			log.Printf("✅ Загружен .env файл: %s\n", path)
+			break
+		}
+	}
 	if lerr != nil {
-		log.Printf("failed to load .env file: %v\n", lerr)
+		log.Printf("❌ Не удалось найти .env файл: %v\n", lerr)
 		return
 	}
 
