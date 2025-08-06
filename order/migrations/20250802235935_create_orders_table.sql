@@ -8,7 +8,7 @@ create table orders (
     payment_method integer,
     status integer not null default 0,
     created_at timestamp with time zone default now(),
-    updated_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
 );
 
 create index idx_orders_user_uuid on orders(user_uuid);
