@@ -1,7 +1,9 @@
 package order
 
 import (
+	"context"
 	"errors"
+	"testing"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -10,171 +12,257 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	clientMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/mocks"
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
+	serviceMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/service/mocks"
 )
 
-func (s *ServiceSuite) TestPay() {
-	s.Run("success", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		paymentMethod := model.PaymentMethodCard
-		transactionUUID := gofakeit.UUID()
+func Test_SuccessPayOrder(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		existingOrder := &model.Order{
-			OrderUUID:       orderUUID,
-			UserUUID:        userUUID,
-			PartUuids:       []string{gofakeit.UUID()},
-			TotalPrice:      100.0,
-			Status:          model.StatusPendingPayment,
-			TransactionUUID: nil,
-			PaymentMethod:   nil,
-			CreatedAt:       lo.ToPtr(time.Now()),
-			UpdatedAt:       nil,
-		}
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodCard
+	transactionUUID := gofakeit.UUID()
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
-		s.paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
-		s.orderRepository.On("Update", s.ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	existingOrder := &model.Order{
+		OrderUUID:       orderUUID,
+		UserUUID:        userUUID,
+		PartUuids:       []string{gofakeit.UUID()},
+		TotalPrice:      100.0,
+		Status:          model.StatusPendingPayment,
+		TransactionUUID: nil,
+		PaymentMethod:   nil,
+		CreatedAt:       lo.ToPtr(time.Now()),
+		UpdatedAt:       nil,
+	}
 
-		result, err := s.service.Pay(s.ctx, orderUUID, paymentMethod)
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
+	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
 
-		require.NoError(s.T(), err)
-		assert.Equal(s.T(), transactionUUID, result)
-	})
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
-	s.Run("order_not_found", func() {
-		orderUUID := gofakeit.UUID()
-		paymentMethod := model.PaymentMethodCard
+	require.NoError(t, err)
+	assert.Equal(t, transactionUUID, result)
+}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
+func Test_PayErrorWhenOrderNotFound(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		result, err := s.service.Pay(s.ctx, orderUUID, paymentMethod)
+	orderUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodCard
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderNotFound)
-		assert.Empty(s.T(), result)
-	})
+	orderRepository.On("Get", ctx, orderUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
 
-	s.Run("order_already_paid", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		paymentMethod := model.PaymentMethodCard
-		existingTransactionUUID := gofakeit.UUID()
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
-		existingOrder := &model.Order{
-			OrderUUID:       orderUUID,
-			UserUUID:        userUUID,
-			Status:          model.StatusPaid,
-			TransactionUUID: &existingTransactionUUID,
-			PaymentMethod:   lo.ToPtr(model.PaymentMethodSBP),
-		}
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderNotFound)
+	assert.Empty(t, result)
+}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
+func Test_PayErrorWhenOrderAlreadyPaid(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		result, err := s.service.Pay(s.ctx, orderUUID, paymentMethod)
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodCard
+	existingTransactionUUID := gofakeit.UUID()
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderAlreadyPaid)
-		assert.Empty(s.T(), result)
-	})
+	existingOrder := &model.Order{
+		OrderUUID:       orderUUID,
+		UserUUID:        userUUID,
+		Status:          model.StatusPaid,
+		TransactionUUID: &existingTransactionUUID,
+		PaymentMethod:   lo.ToPtr(model.PaymentMethodSBP),
+	}
 
-	s.Run("order_cancelled", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		paymentMethod := model.PaymentMethodCard
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 
-		existingOrder := &model.Order{
-			OrderUUID: orderUUID,
-			UserUUID:  userUUID,
-			Status:    model.StatusCancelled,
-		}
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderAlreadyPaid)
+	assert.Empty(t, result)
+}
 
-		result, err := s.service.Pay(s.ctx, orderUUID, paymentMethod)
+func Test_PayErrorWhenOrderCancelled(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderCancelled)
-		assert.Empty(s.T(), result)
-	})
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodCard
 
-	s.Run("payment_client_error", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		paymentMethod := model.PaymentMethodCard
-		paymentErr := errors.New("payment service unavailable")
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusCancelled,
+	}
 
-		existingOrder := &model.Order{
-			OrderUUID: orderUUID,
-			UserUUID:  userUUID,
-			Status:    model.StatusPendingPayment,
-		}
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
-		s.paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return("", paymentErr).Once()
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
-		result, err := s.service.Pay(s.ctx, orderUUID, paymentMethod)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderCancelled)
+	assert.Empty(t, result)
+}
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, paymentErr)
-		assert.Empty(s.T(), result)
-	})
+func Test_PayErrorWhenPaymentClientFails(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-	s.Run("repository_update_error", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		paymentMethod := model.PaymentMethodCard
-		transactionUUID := gofakeit.UUID()
-		repoErr := errors.New("database update failed")
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodCard
+	paymentErr := errors.New("payment service unavailable")
 
-		existingOrder := &model.Order{
-			OrderUUID: orderUUID,
-			UserUUID:  userUUID,
-			Status:    model.StatusPendingPayment,
-		}
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusPendingPayment,
+	}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
-		s.paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
-		s.orderRepository.On("Update", s.ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(repoErr).Once()
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return("", paymentErr).Once()
 
-		result, err := s.service.Pay(s.ctx, orderUUID, paymentMethod)
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, repoErr)
-		assert.Empty(s.T(), result)
-	})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, paymentErr)
+	assert.Empty(t, result)
+}
 
-	s.Run("success_different_payment_methods", func() {
-		testCases := []struct {
-			name          string
-			paymentMethod model.PaymentMethod
-		}{
-			{"sbp", model.PaymentMethodSBP},
-			{"credit_card", model.PaymentMethodCreditCard},
-			{"investor_money", model.PaymentMethodInvestorMoney},
-		}
+func Test_PayErrorWhenRepositoryUpdateFails(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		for _, tc := range testCases {
-			s.Run(tc.name, func() {
-				orderUUID := gofakeit.UUID()
-				userUUID := gofakeit.UUID()
-				transactionUUID := gofakeit.UUID()
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodCard
+	transactionUUID := gofakeit.UUID()
+	repoErr := errors.New("database update failed")
 
-				existingOrder := &model.Order{
-					OrderUUID: orderUUID,
-					UserUUID:  userUUID,
-					Status:    model.StatusPendingPayment,
-				}
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusPendingPayment,
+	}
 
-				s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
-				s.paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, tc.paymentMethod).Return(transactionUUID, nil).Once()
-				s.orderRepository.On("Update", s.ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
+	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(repoErr).Once()
 
-				result, err := s.service.Pay(s.ctx, orderUUID, tc.paymentMethod)
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
-				require.NoError(s.T(), err)
-				assert.Equal(s.T(), transactionUUID, result)
-			})
-		}
-	})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, repoErr)
+	assert.Empty(t, result)
+}
+
+func Test_SuccessPayOrderWithSBP(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
+
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodSBP
+	transactionUUID := gofakeit.UUID()
+
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusPendingPayment,
+	}
+
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
+	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
+
+	require.NoError(t, err)
+	assert.Equal(t, transactionUUID, result)
+}
+
+func Test_SuccessPayOrderWithCreditCard(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
+
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodCreditCard
+	transactionUUID := gofakeit.UUID()
+
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusPendingPayment,
+	}
+
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
+	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
+
+	require.NoError(t, err)
+	assert.Equal(t, transactionUUID, result)
+}
+
+func Test_SuccessPayOrderWithInvestorMoney(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
+
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	paymentMethod := model.PaymentMethodInvestorMoney
+	transactionUUID := gofakeit.UUID()
+
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusPendingPayment,
+	}
+
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
+	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+
+	result, err := service.Pay(ctx, orderUUID, paymentMethod)
+
+	require.NoError(t, err)
+	assert.Equal(t, transactionUUID, result)
 }

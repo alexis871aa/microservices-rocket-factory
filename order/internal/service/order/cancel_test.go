@@ -43,7 +43,7 @@ func Test_SuccessCancelPendingOrder(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func Test_ErrorWhenOrderNotFound(t *testing.T) {
+func Test_CancelErrorWhenOrderNotFound(t *testing.T) {
 	ctx := context.Background()
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
@@ -60,7 +60,7 @@ func Test_ErrorWhenOrderNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, model.ErrOrderNotFound)
 }
 
-func Test_ErrorWhenOrderAlreadyPaid(t *testing.T) {
+func Test_CancelErrorWhenOrderAlreadyPaid(t *testing.T) {
 	ctx := context.Background()
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
@@ -87,7 +87,7 @@ func Test_ErrorWhenOrderAlreadyPaid(t *testing.T) {
 	assert.ErrorIs(t, err, model.ErrOrderAlreadyPaid)
 }
 
-func Test_ErrorWhenOrderAlreadyCancelled(t *testing.T) {
+func Test_CancelErrorWhenOrderAlreadyCancelled(t *testing.T) {
 	ctx := context.Background()
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
@@ -112,7 +112,7 @@ func Test_ErrorWhenOrderAlreadyCancelled(t *testing.T) {
 	assert.ErrorIs(t, err, model.ErrOrderCancelled)
 }
 
-func Test_ErrorWhenRepositoryGetFails(t *testing.T) {
+func Test_CancelErrorWhenRepositoryGetFails(t *testing.T) {
 	ctx := context.Background()
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
@@ -130,7 +130,7 @@ func Test_ErrorWhenRepositoryGetFails(t *testing.T) {
 	assert.ErrorIs(t, err, repoErr)
 }
 
-func Test_ErrorWhenRepositoryUpdateFails(t *testing.T) {
+func Test_CancelErrorWhenRepositoryUpdateFails(t *testing.T) {
 	ctx := context.Background()
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
@@ -156,7 +156,7 @@ func Test_ErrorWhenRepositoryUpdateFails(t *testing.T) {
 	assert.ErrorIs(t, err, repoErr)
 }
 
-func Test_ErrorWhenEmptyUUID(t *testing.T) {
+func Test_CancelErrorWhenEmptyUUID(t *testing.T) {
 	ctx := context.Background()
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)

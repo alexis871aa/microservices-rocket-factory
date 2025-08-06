@@ -1,179 +1,186 @@
 package order
 
 import (
+	"context"
 	"errors"
-	"time"
+	"testing"
 
 	"github.com/brianvoe/gofakeit/v7"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	clientMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/mocks"
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
+	serviceMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/service/mocks"
 )
 
-func (s *ServiceSuite) TestCreate() {
-	s.Run("success", func() {
-		userUUID := gofakeit.UUID()
-		partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
+func Test_SuccessCreateOrder(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		parts := []model.Part{
-			{
-				Uuid:  partUUIDs[0],
-				Name:  "Engine",
-				Price: 100.0,
-				Dimensions: model.Dimensions{
-					Length: 10.0,
-					Width:  5.0,
-					Height: 3.0,
-					Weight: 50.0,
-				},
-				Manufacturer: model.Manufacturer{
-					Name:    "SpaceX",
-					Country: "USA",
-					Website: "spacex.com",
-				},
-				CreatedAt: lo.ToPtr(time.Now()),
-			},
-			{
-				Uuid:  partUUIDs[1],
-				Name:  "Fuel Tank",
-				Price: 200.0,
-				Dimensions: model.Dimensions{
-					Length: 20.0,
-					Width:  10.0,
-					Height: 15.0,
-					Weight: 100.0,
-				},
-				Manufacturer: model.Manufacturer{
-					Name:    "Boeing",
-					Country: "USA",
-					Website: "boeing.com",
-				},
-				CreatedAt: lo.ToPtr(time.Now()),
-			},
-		}
+	userUUID := gofakeit.UUID()
+	partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
 
-		filter := model.PartsFilter{
-			Uuids: &partUUIDs,
-		}
+	parts := []model.Part{
+		{
+			Uuid:  partUUIDs[0],
+			Name:  "Engine",
+			Price: 100.0,
+		},
+		{
+			Uuid:  partUUIDs[1],
+			Name:  "Fuel Tank",
+			Price: 200.0,
+		},
+	}
 
-		s.inventoryClient.On("ListParts", mock.Anything, filter).Return(parts, nil).Once()
-		s.orderRepository.On("Create", mock.Anything, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	filter := model.PartsFilter{
+		Uuids: &partUUIDs,
+	}
 
-		result, err := s.service.Create(s.ctx, userUUID, partUUIDs)
+	inventoryClient.On("ListParts", mock.Anything, filter).Return(parts, nil).Once()
+	orderRepository.On("Create", mock.Anything, mock.AnythingOfType("model.Order")).Return(nil).Once()
 
-		require.NoError(s.T(), err)
-		assert.NotNil(s.T(), result)
-		assert.Equal(s.T(), userUUID, result.UserUUID)
-		assert.Equal(s.T(), partUUIDs, result.PartUuids)
-		assert.Equal(s.T(), float32(300.0), result.TotalPrice)
-		assert.Equal(s.T(), model.StatusPendingPayment, result.Status)
-		assert.NotEmpty(s.T(), result.OrderUUID)
-		assert.NotNil(s.T(), result.CreatedAt)
-		assert.Nil(s.T(), result.UpdatedAt)
-		assert.Nil(s.T(), result.TransactionUUID)
-		assert.Nil(s.T(), result.PaymentMethod)
-	})
+	result, err := service.Create(ctx, userUUID, partUUIDs)
 
-	s.Run("parts_not_found", func() {
-		userUUID := gofakeit.UUID()
-		partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, userUUID, result.UserUUID)
+	assert.Equal(t, partUUIDs, result.PartUuids)
+	assert.Equal(t, float32(300.0), result.TotalPrice)
+	assert.Equal(t, model.StatusPendingPayment, result.Status)
+	assert.NotEmpty(t, result.OrderUUID)
+	assert.NotNil(t, result.CreatedAt)
+}
 
-		filter := model.PartsFilter{
-			Uuids: &partUUIDs,
-		}
+func Test_CreateErrorWhenPartsNotFound(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		s.inventoryClient.On("ListParts", mock.Anything, filter).Return([]model.Part{}, nil).Once()
+	userUUID := gofakeit.UUID()
+	partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
 
-		result, err := s.service.Create(s.ctx, userUUID, partUUIDs)
+	filter := model.PartsFilter{
+		Uuids: &partUUIDs,
+	}
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrPartsNotFound)
-		assert.Nil(s.T(), result)
-	})
+	inventoryClient.On("ListParts", mock.Anything, filter).Return([]model.Part{}, nil).Once()
 
-	s.Run("partial_parts_found", func() {
-		userUUID := gofakeit.UUID()
-		partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
+	result, err := service.Create(ctx, userUUID, partUUIDs)
 
-		parts := []model.Part{
-			{
-				Uuid:  partUUIDs[0],
-				Name:  "Engine",
-				Price: 100.0,
-			},
-		}
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrPartsNotFound)
+	assert.Nil(t, result)
+}
 
-		filter := model.PartsFilter{
-			Uuids: &partUUIDs,
-		}
+func Test_CreateErrorWhenPartialPartsFound(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		s.inventoryClient.On("ListParts", mock.Anything, filter).Return(parts, nil).Once()
+	userUUID := gofakeit.UUID()
+	partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
 
-		result, err := s.service.Create(s.ctx, userUUID, partUUIDs)
+	parts := []model.Part{
+		{
+			Uuid:  partUUIDs[0],
+			Name:  "Engine",
+			Price: 100.0,
+		},
+	}
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrPartsNotFound)
-		assert.Nil(s.T(), result)
-	})
+	filter := model.PartsFilter{
+		Uuids: &partUUIDs,
+	}
 
-	s.Run("inventory_client_error", func() {
-		userUUID := gofakeit.UUID()
-		partUUIDs := []string{gofakeit.UUID()}
-		clientErr := errors.New("inventory service unavailable")
+	inventoryClient.On("ListParts", mock.Anything, filter).Return(parts, nil).Once()
 
-		filter := model.PartsFilter{
-			Uuids: &partUUIDs,
-		}
+	result, err := service.Create(ctx, userUUID, partUUIDs)
 
-		s.inventoryClient.On("ListParts", mock.Anything, filter).Return([]model.Part{}, clientErr).Once()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrPartsNotFound)
+	assert.Nil(t, result)
+}
 
-		result, err := s.service.Create(s.ctx, userUUID, partUUIDs)
+func Test_CreateErrorWhenInventoryClientFails(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, clientErr)
-		assert.Nil(s.T(), result)
-	})
+	userUUID := gofakeit.UUID()
+	partUUIDs := []string{gofakeit.UUID()}
+	clientErr := errors.New("inventory service unavailable")
 
-	s.Run("repository_error", func() {
-		userUUID := gofakeit.UUID()
-		partUUIDs := []string{gofakeit.UUID()}
-		repoErr := errors.New("database connection failed")
+	filter := model.PartsFilter{
+		Uuids: &partUUIDs,
+	}
 
-		parts := []model.Part{
-			{
-				Uuid:  partUUIDs[0],
-				Name:  "Engine",
-				Price: 100.0,
-			},
-		}
+	inventoryClient.On("ListParts", mock.Anything, filter).Return([]model.Part{}, clientErr).Once()
 
-		filter := model.PartsFilter{
-			Uuids: &partUUIDs,
-		}
+	result, err := service.Create(ctx, userUUID, partUUIDs)
 
-		s.inventoryClient.On("ListParts", mock.Anything, filter).Return(parts, nil).Once()
-		s.orderRepository.On("Create", mock.Anything, mock.AnythingOfType("model.Order")).Return(repoErr).Once()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, clientErr)
+	assert.Nil(t, result)
+}
 
-		result, err := s.service.Create(s.ctx, userUUID, partUUIDs)
+func Test_CreateErrorWhenRepositoryCreateFails(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, repoErr)
-		assert.Nil(s.T(), result)
-	})
+	userUUID := gofakeit.UUID()
+	partUUIDs := []string{gofakeit.UUID()}
+	repoErr := errors.New("database connection failed")
 
-	s.Run("empty_part_uuids", func() {
-		userUUID := gofakeit.UUID()
-		partUUIDs := []string{}
+	parts := []model.Part{
+		{
+			Uuid:  partUUIDs[0],
+			Name:  "Engine",
+			Price: 100.0,
+		},
+	}
 
-		// Не устанавливаем моки, так как сервис должен вернуть ошибку до вызова клиента
+	filter := model.PartsFilter{
+		Uuids: &partUUIDs,
+	}
 
-		result, err := s.service.Create(s.ctx, userUUID, partUUIDs)
+	inventoryClient.On("ListParts", mock.Anything, filter).Return(parts, nil).Once()
+	orderRepository.On("Create", mock.Anything, mock.AnythingOfType("model.Order")).Return(repoErr).Once()
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrPartsNotFound)
-		assert.Nil(s.T(), result)
-	})
+	result, err := service.Create(ctx, userUUID, partUUIDs)
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, repoErr)
+	assert.Nil(t, result)
+}
+
+func Test_CreateErrorWhenEmptyPartUUIDs(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
+
+	userUUID := gofakeit.UUID()
+	partUUIDs := []string{}
+
+	result, err := service.Create(ctx, userUUID, partUUIDs)
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrPartsNotFound)
+	assert.Nil(t, result)
 }

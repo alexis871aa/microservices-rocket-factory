@@ -1,7 +1,9 @@
 package order
 
 import (
+	"context"
 	"errors"
+	"testing"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -9,79 +11,90 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	clientMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/mocks"
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
+	serviceMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/service/mocks"
 )
 
-func (s *ServiceSuite) TestGet() {
-	s.Run("success", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
-		totalPrice := gofakeit.Float32()
-		transactionUUID := gofakeit.UUID()
-		paymentMethod := model.PaymentMethodCard
-		createdAt := lo.ToPtr(time.Now())
-		updatedAt := lo.ToPtr(time.Now())
+func Test_SuccessGetOrder(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		expectedOrder := &model.Order{
-			OrderUUID:       orderUUID,
-			UserUUID:        userUUID,
-			PartUuids:       partUUIDs,
-			TotalPrice:      totalPrice,
-			TransactionUUID: &transactionUUID,
-			PaymentMethod:   &paymentMethod,
-			Status:          model.StatusPaid,
-			CreatedAt:       createdAt,
-			UpdatedAt:       updatedAt,
-		}
+	orderUUID := gofakeit.UUID()
+	expectedOrder := &model.Order{
+		OrderUUID:       orderUUID,
+		UserUUID:        gofakeit.UUID(),
+		PartUuids:       []string{gofakeit.UUID(), gofakeit.UUID()},
+		TotalPrice:      gofakeit.Float32(),
+		TransactionUUID: lo.ToPtr(gofakeit.UUID()),
+		PaymentMethod:   lo.ToPtr(model.PaymentMethodCard),
+		Status:          model.StatusPaid,
+		CreatedAt:       lo.ToPtr(time.Now()),
+		UpdatedAt:       lo.ToPtr(time.Now()),
+	}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(expectedOrder, nil).Once()
+	orderRepository.On("Get", ctx, orderUUID).Return(expectedOrder, nil).Once()
 
-		result, err := s.service.Get(s.ctx, orderUUID)
+	result, err := service.Get(ctx, orderUUID)
 
-		require.NoError(s.T(), err)
-		assert.Equal(s.T(), expectedOrder, result)
-		assert.Equal(s.T(), orderUUID, result.OrderUUID)
-		assert.Equal(s.T(), userUUID, result.UserUUID)
-		assert.Equal(s.T(), model.StatusPaid, result.Status)
-		assert.NotNil(s.T(), result.PaymentMethod)
-		assert.Equal(s.T(), paymentMethod, *result.PaymentMethod)
-	})
+	require.NoError(t, err)
+	assert.Equal(t, expectedOrder, result)
+}
 
-	s.Run("order_not_found", func() {
-		orderUUID := gofakeit.UUID()
+func Test_GetErrorWhenOrderNotFound(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
+	orderUUID := gofakeit.UUID()
 
-		result, err := s.service.Get(s.ctx, orderUUID)
+	orderRepository.On("Get", ctx, orderUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderNotFound)
-		assert.Nil(s.T(), result)
-	})
+	result, err := service.Get(ctx, orderUUID)
 
-	s.Run("repository_error", func() {
-		orderUUID := gofakeit.UUID()
-		repoErr := errors.New("database connection failed")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderNotFound)
+	assert.Nil(t, result)
+}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(&model.Order{}, repoErr).Once()
+func Test_GetErrorWhenRepositoryGetFails(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		result, err := s.service.Get(s.ctx, orderUUID)
+	orderUUID := gofakeit.UUID()
+	repoErr := errors.New("database connection failed")
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, repoErr)
-		assert.Nil(s.T(), result)
-	})
+	orderRepository.On("Get", ctx, orderUUID).Return(&model.Order{}, repoErr).Once()
 
-	s.Run("empty_uuid", func() {
-		emptyUUID := ""
+	result, err := service.Get(ctx, orderUUID)
 
-		s.orderRepository.On("Get", s.ctx, emptyUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, repoErr)
+	assert.Nil(t, result)
+}
 
-		result, err := s.service.Get(s.ctx, emptyUUID)
+func Test_GetErrorWhenEmptyOrderUUID(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderNotFound)
-		assert.Nil(s.T(), result)
-	})
+	emptyUUID := ""
+
+	orderRepository.On("Get", ctx, emptyUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
+
+	result, err := service.Get(ctx, emptyUUID)
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderNotFound)
+	assert.Nil(t, result)
 }
