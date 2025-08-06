@@ -2,64 +2,65 @@ package part
 
 import (
 	"context"
+	"log"
+
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/model"
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/converter"
+	repoModel "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/model"
 )
 
-func (r *repository) ListParts(_ context.Context, filter model.PartsFilter) ([]model.Part, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (r *repository) ListParts(ctx context.Context, filter model.PartsFilter) ([]model.Part, error) {
+	mongoFilter := createMongoFilter(filter)
 
-	var parts []model.Part
-
-	for _, repoPart := range r.data {
-		modelPart := converter.PartToModel(repoPart)
-		if matchesFilter(modelPart, filter) {
-			parts = append(parts, modelPart)
+	cursor, err := r.collection.Find(ctx, mongoFilter)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		cerr := cursor.Close(ctx)
+		if cerr != nil {
+			log.Printf("failed to close cursor: %v\n", err)
 		}
+	}()
+
+	var repoParts []repoModel.Part
+	err = cursor.All(ctx, &repoParts)
+	if err != nil {
+		return nil, err
+	}
+
+	parts := make([]model.Part, len(repoParts))
+	for i, repoPart := range repoParts {
+		parts[i] = converter.PartToModel(repoPart)
 	}
 
 	return parts, nil
 }
 
-func matchesFilter(part model.Part, filter model.PartsFilter) bool {
-	return matchesBy(part, filter.Uuids, func(part model.Part) string { return part.Uuid }) &&
-		matchesBy(part, filter.Names, func(part model.Part) string { return part.Name }) &&
-		matchesBy(part, filter.Categories, func(part model.Part) model.Category { return part.Category }) &&
-		matchesBy(part, filter.ManufacturerCountries, func(part model.Part) string { return part.Manufacturer.Country }) &&
-		matchesByTags(part, filter.Tags)
-}
+func createMongoFilter(filter model.PartsFilter) bson.M {
+	mongoFilter := bson.M{}
 
-func matchesByTags(part model.Part, filterTags *[]string) bool {
-	if filterTags == nil || len(*filterTags) == 0 {
-		return true
-	}
-	if part.Tags == nil {
-		return false
+	if filter.Uuids != nil && len(*filter.Uuids) > 0 {
+		mongoFilter["_id"] = bson.M{"$in": *filter.Uuids}
 	}
 
-	partTags := *part.Tags
-	for _, filterTag := range *filterTags {
-		for _, partTag := range partTags {
-			if partTag == filterTag {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func matchesBy[T comparable](part model.Part, filter *[]T, get func(part model.Part) T) bool {
-	if filter == nil || len(*filter) == 0 {
-		return true
+	if filter.Names != nil && len(*filter.Names) > 0 {
+		mongoFilter["name"] = bson.M{"$in": *filter.Names}
 	}
 
-	val := get(part)
-	for _, filterVal := range *filter {
-		if val == filterVal {
-			return true
-		}
+	if filter.Categories != nil && len(*filter.Categories) > 0 {
+		mongoFilter["category"] = bson.M{"$in": *filter.Categories}
 	}
-	return false
+
+	if filter.ManufacturerCountries != nil && len(*filter.ManufacturerCountries) > 0 {
+		mongoFilter["manufacturer.country"] = bson.M{"$in": *filter.ManufacturerCountries}
+	}
+
+	if filter.Tags != nil && len(*filter.Tags) > 0 {
+		mongoFilter["tags"] = bson.M{"$in": *filter.Tags}
+	}
+
+	return mongoFilter
 }
