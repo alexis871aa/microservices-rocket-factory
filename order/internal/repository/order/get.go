@@ -38,11 +38,11 @@ func (r *repository) Get(ctx context.Context, orderUUID string) (*model.Order, e
 		&order.UpdatedAt,
 	)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, model.ErrOrderNotFound
-	}
-
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, model.ErrOrderNotFound
+		}
+
 		log.Printf("failed to select order: %v\n", err)
 		return nil, err
 	}
