@@ -37,7 +37,6 @@ func (r *repository) Get(ctx context.Context, orderUUID string) (*model.Order, e
 		&order.CreatedAt,
 		&order.UpdatedAt,
 	)
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, model.ErrOrderNotFound
