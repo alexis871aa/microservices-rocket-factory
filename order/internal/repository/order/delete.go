@@ -2,17 +2,37 @@ package order
 
 import (
 	"context"
+	"log"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
 )
 
-func (r *repository) Delete(_ context.Context, orderUUID string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *repository) Delete(ctx context.Context, orderUUID string) error {
+	builder := sq.Delete("orders").
+		Where(sq.Eq{"order_uuid": orderUUID}).
+		PlaceholderFormat(sq.Dollar)
 
-	if _, ok := r.data[orderUUID]; !ok {
+	query, args, err := builder.ToSql()
+	if err != nil {
+		log.Printf("failed to build query: %v\n", err)
+		return err
+	}
+
+	res, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		log.Printf("failed to delete order: %v\n", err)
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
 		return model.ErrOrderNotFound
 	}
-	delete(r.data, orderUUID)
+
 	return nil
 }

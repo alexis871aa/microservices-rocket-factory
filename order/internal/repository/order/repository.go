@@ -1,21 +1,19 @@
 package order
 
 import (
-	"sync"
+	"database/sql"
 
-	def "github.com/alexis871aa/microservices-rocket-factory/order/internal/repository"
-	repoModel "github.com/alexis871aa/microservices-rocket-factory/order/internal/repository/model"
+	def "github.com/alexis871aa/microservices-rocket-factory/order/internal/service"
 )
 
 var _ def.OrderRepository = (*repository)(nil)
 
 type repository struct {
-	mu   sync.RWMutex
-	data map[string]repoModel.Order
+	db *sql.DB
 }
 
-func NewRepository() *repository {
+func NewRepository(db *sql.DB) *repository {
 	return &repository{
-		data: make(map[string]repoModel.Order),
+		db: db,
 	}
 }

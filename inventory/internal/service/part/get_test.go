@@ -1,6 +1,8 @@
 package part
 
 import (
+	"context"
+	"testing"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -9,106 +11,95 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/model"
+	serviceMocks "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service/mocks"
 )
 
-func (s *ServiceSuite) TestGetPart() {
-	s.Run("success", func() {
-		var (
-			uuid          = gofakeit.UUID()
-			name          = gofakeit.Name()
-			description   = gofakeit.Word()
-			price         = gofakeit.Float64()
-			stockQuantity = gofakeit.Int64()
-			category      = model.Category(gofakeit.IntRange(1, 4))
-			dimensions    = model.Dimensions{
-				Length: gofakeit.Float64(),
-				Width:  gofakeit.Float64(),
-				Height: gofakeit.Float64(),
-				Weight: gofakeit.Float64(),
-			}
-			manufacturer = model.Manufacturer{
-				Name:    gofakeit.Name(),
-				Country: gofakeit.Country(),
-				Website: gofakeit.URL(),
-			}
-			tags = lo.ToPtr([]string{
-				gofakeit.Word(),
-				gofakeit.Word(),
-				gofakeit.Word(),
-			})
-			metadata = map[string]model.Value{
-				"color":         {Str: lo.ToPtr(gofakeit.Color())},
-				"weight":        {Float: lo.ToPtr(gofakeit.Float64())},
-				"is_premium":    {Bool: lo.ToPtr(gofakeit.Bool())},
-				"serial_number": {Int: lo.ToPtr(gofakeit.Int64())},
-			}
-			createdAt = lo.ToPtr(time.Now())
-			updatedAt = lo.ToPtr(time.Now())
-		)
+func Test_SuccessGetPart(t *testing.T) {
+	ctx := context.Background()
+	partRepository := serviceMocks.NewPartRepository(t)
+	service := NewService(partRepository)
 
-		expectedPart := model.Part{
-			Uuid:          uuid,
-			Name:          name,
-			Description:   description,
-			Price:         price,
-			StockQuantity: stockQuantity,
-			Category:      category,
-			Dimensions:    dimensions,
-			Manufacturer:  manufacturer,
-			Tags:          tags,
-			Metadata:      metadata,
-			CreatedAt:     createdAt,
-			UpdatedAt:     updatedAt,
-		}
+	uuid := gofakeit.UUID()
+	expectedPart := model.Part{
+		Uuid:          uuid,
+		Name:          gofakeit.Name(),
+		Description:   gofakeit.Word(),
+		Price:         gofakeit.Float64(),
+		StockQuantity: gofakeit.Int64(),
+		Category:      model.Category(gofakeit.IntRange(1, 4)),
+		Dimensions: model.Dimensions{
+			Length: gofakeit.Float64(),
+			Width:  gofakeit.Float64(),
+			Height: gofakeit.Float64(),
+			Weight: gofakeit.Float64(),
+		},
+		Manufacturer: model.Manufacturer{
+			Name:    gofakeit.Name(),
+			Country: gofakeit.Country(),
+			Website: gofakeit.URL(),
+		},
+		Tags: lo.ToPtr([]string{gofakeit.Word(), gofakeit.Word()}),
+		Metadata: map[string]model.Value{
+			"color":  {Str: lo.ToPtr(gofakeit.Color())},
+			"weight": {Float: lo.ToPtr(gofakeit.Float64())},
+		},
+		CreatedAt: lo.ToPtr(time.Now()),
+		UpdatedAt: lo.ToPtr(time.Now()),
+	}
 
-		s.partRepository.On("GetPart", s.ctx, uuid).Return(expectedPart, nil).Once()
+	partRepository.On("GetPart", ctx, uuid).Return(expectedPart, nil).Once()
 
-		actualPart, err := s.service.GetPart(s.ctx, uuid)
+	actualPart, err := service.GetPart(ctx, uuid)
 
-		require.NoError(s.T(), err)
-		assert.Equal(s.T(), expectedPart, actualPart)
-		assert.Equal(s.T(), uuid, actualPart.Uuid)
-		assert.Equal(s.T(), name, actualPart.Name)
-		assert.NotNil(s.T(), actualPart.Tags)
-		assert.Len(s.T(), actualPart.Metadata, 4)
-	})
+	require.NoError(t, err)
+	assert.Equal(t, expectedPart, actualPart)
+}
 
-	s.Run("repository_error", func() {
-		var (
-			uuid    = gofakeit.UUID()
-			repoErr = gofakeit.Error()
-		)
+func Test_ErrorWhenCantGetPartFromRepository(t *testing.T) {
+	ctx := context.Background()
+	partRepository := serviceMocks.NewPartRepository(t)
+	service := NewService(partRepository)
 
-		s.partRepository.On("GetPart", s.ctx, uuid).Return(model.Part{}, repoErr).Once()
+	uuid := gofakeit.UUID()
+	repoErr := gofakeit.Error()
 
-		actualPart, err := s.service.GetPart(s.ctx, uuid)
+	partRepository.On("GetPart", ctx, uuid).Return(model.Part{}, repoErr).Once()
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, repoErr)
-		assert.Empty(s.T(), actualPart)
-	})
+	actualPart, err := service.GetPart(ctx, uuid)
 
-	s.Run("part_not_found", func() {
-		uuid := gofakeit.UUID()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, repoErr)
+	assert.Empty(t, actualPart)
+}
 
-		s.partRepository.On("GetPart", s.ctx, uuid).Return(model.Part{}, model.ErrPartNotFound).Once()
+func Test_ErrorWhenPartNotFound(t *testing.T) {
+	ctx := context.Background()
+	partRepository := serviceMocks.NewPartRepository(t)
+	service := NewService(partRepository)
 
-		actualPart, err := s.service.GetPart(s.ctx, uuid)
+	uuid := gofakeit.UUID()
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrPartNotFound)
-		assert.Empty(s.T(), actualPart)
-	})
+	partRepository.On("GetPart", ctx, uuid).Return(model.Part{}, model.ErrPartNotFound).Once()
 
-	s.Run("empty_uuid", func() {
-		emptyUUID := ""
+	actualPart, err := service.GetPart(ctx, uuid)
 
-		s.partRepository.On("GetPart", s.ctx, emptyUUID).Return(model.Part{}, model.ErrPartNotFound).Once()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrPartNotFound)
+	assert.Empty(t, actualPart)
+}
 
-		actualPart, err := s.service.GetPart(s.ctx, emptyUUID)
+func Test_ErrorWhenEmptyUUID(t *testing.T) {
+	ctx := context.Background()
+	partRepository := serviceMocks.NewPartRepository(t)
+	service := NewService(partRepository)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrPartNotFound)
-		assert.Empty(s.T(), actualPart)
-	})
+	emptyUUID := ""
+
+	partRepository.On("GetPart", ctx, emptyUUID).Return(model.Part{}, model.ErrPartNotFound).Once()
+
+	actualPart, err := service.GetPart(ctx, emptyUUID)
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrPartNotFound)
+	assert.Empty(t, actualPart)
 }

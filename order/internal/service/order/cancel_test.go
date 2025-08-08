@@ -1,7 +1,9 @@
 package order
 
 import (
+	"context"
 	"errors"
+	"testing"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -10,121 +12,163 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	clientMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/mocks"
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
+	serviceMocks "github.com/alexis871aa/microservices-rocket-factory/order/internal/service/mocks"
 )
 
-func (s *ServiceSuite) TestCancel() {
-	s.Run("success_pending_payment", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
+func Test_SuccessCancelPendingOrder(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		existingOrder := &model.Order{
-			OrderUUID: orderUUID,
-			UserUUID:  userUUID,
-			Status:    model.StatusPendingPayment,
-			CreatedAt: lo.ToPtr(time.Now()),
-			UpdatedAt: nil,
-		}
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
-		s.orderRepository.On("Update", s.ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusPendingPayment,
+		CreatedAt: lo.ToPtr(time.Now()),
+		UpdatedAt: nil,
+	}
 
-		err := s.service.Cancel(s.ctx, orderUUID)
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
 
-		require.NoError(s.T(), err)
-	})
+	err := service.Cancel(ctx, orderUUID)
 
-	s.Run("order_not_found", func() {
-		orderUUID := gofakeit.UUID()
+	require.NoError(t, err)
+}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
+func Test_CancelErrorWhenOrderNotFound(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		err := s.service.Cancel(s.ctx, orderUUID)
+	orderUUID := gofakeit.UUID()
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderNotFound)
-	})
+	orderRepository.On("Get", ctx, orderUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
 
-	s.Run("order_already_paid", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		transactionUUID := gofakeit.UUID()
+	err := service.Cancel(ctx, orderUUID)
 
-		existingOrder := &model.Order{
-			OrderUUID:       orderUUID,
-			UserUUID:        userUUID,
-			Status:          model.StatusPaid,
-			TransactionUUID: &transactionUUID,
-			PaymentMethod:   lo.ToPtr(model.PaymentMethodCard),
-		}
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderNotFound)
+}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
+func Test_CancelErrorWhenOrderAlreadyPaid(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		err := s.service.Cancel(s.ctx, orderUUID)
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	transactionUUID := gofakeit.UUID()
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderAlreadyPaid)
-	})
+	existingOrder := &model.Order{
+		OrderUUID:       orderUUID,
+		UserUUID:        userUUID,
+		Status:          model.StatusPaid,
+		TransactionUUID: &transactionUUID,
+		PaymentMethod:   lo.ToPtr(model.PaymentMethodCard),
+	}
 
-	s.Run("order_already_cancelled", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 
-		existingOrder := &model.Order{
-			OrderUUID: orderUUID,
-			UserUUID:  userUUID,
-			Status:    model.StatusCancelled,
-			UpdatedAt: lo.ToPtr(time.Now()),
-		}
+	err := service.Cancel(ctx, orderUUID)
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderAlreadyPaid)
+}
 
-		err := s.service.Cancel(s.ctx, orderUUID)
+func Test_CancelErrorWhenOrderAlreadyCancelled(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderCancelled)
-	})
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
 
-	s.Run("repository_get_error", func() {
-		orderUUID := gofakeit.UUID()
-		repoErr := errors.New("database connection failed")
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusCancelled,
+		UpdatedAt: lo.ToPtr(time.Now()),
+	}
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(&model.Order{}, repoErr).Once()
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 
-		err := s.service.Cancel(s.ctx, orderUUID)
+	err := service.Cancel(ctx, orderUUID)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, repoErr)
-	})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderCancelled)
+}
 
-	s.Run("repository_update_error", func() {
-		orderUUID := gofakeit.UUID()
-		userUUID := gofakeit.UUID()
-		repoErr := errors.New("database update failed")
+func Test_CancelErrorWhenRepositoryGetFails(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		existingOrder := &model.Order{
-			OrderUUID: orderUUID,
-			UserUUID:  userUUID,
-			Status:    model.StatusPendingPayment,
-		}
+	orderUUID := gofakeit.UUID()
+	repoErr := errors.New("database connection failed")
 
-		s.orderRepository.On("Get", s.ctx, orderUUID).Return(existingOrder, nil).Once()
-		s.orderRepository.On("Update", s.ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(repoErr).Once()
+	orderRepository.On("Get", ctx, orderUUID).Return(&model.Order{}, repoErr).Once()
 
-		err := s.service.Cancel(s.ctx, orderUUID)
+	err := service.Cancel(ctx, orderUUID)
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, repoErr)
-	})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, repoErr)
+}
 
-	s.Run("empty_uuid", func() {
-		emptyUUID := ""
+func Test_CancelErrorWhenRepositoryUpdateFails(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
 
-		s.orderRepository.On("Get", s.ctx, emptyUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
+	orderUUID := gofakeit.UUID()
+	userUUID := gofakeit.UUID()
+	repoErr := errors.New("database update failed")
 
-		err := s.service.Cancel(s.ctx, emptyUUID)
+	existingOrder := &model.Order{
+		OrderUUID: orderUUID,
+		UserUUID:  userUUID,
+		Status:    model.StatusPendingPayment,
+	}
 
-		require.Error(s.T(), err)
-		assert.ErrorIs(s.T(), err, model.ErrOrderNotFound)
-	})
+	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
+	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(repoErr).Once()
+
+	err := service.Cancel(ctx, orderUUID)
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, repoErr)
+}
+
+func Test_CancelErrorWhenEmptyUUID(t *testing.T) {
+	ctx := context.Background()
+	orderRepository := serviceMocks.NewOrderRepository(t)
+	inventoryClient := clientMocks.NewInventoryClient(t)
+	paymentClient := clientMocks.NewPaymentClient(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient)
+
+	emptyUUID := ""
+
+	orderRepository.On("Get", ctx, emptyUUID).Return(&model.Order{}, model.ErrOrderNotFound).Once()
+
+	err := service.Cancel(ctx, emptyUUID)
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, model.ErrOrderNotFound)
 }

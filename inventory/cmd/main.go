@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -8,6 +9,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -33,8 +37,48 @@ func main() {
 
 	s := grpc.NewServer()
 
-	repo := partRepository.NewRepository()
-	repo.InitParts()
+	ctx := context.Background()
+	envPaths := []string{"../../.env", "../.env", ".env"}
+	var lerr error
+	for _, path := range envPaths {
+		lerr = godotenv.Load(path)
+		if lerr == nil {
+			log.Printf("✅ Загружен .env файл: %s\n", path)
+			break
+		}
+	}
+	if lerr != nil {
+		log.Printf("❌ Не удалось найти .env файл: %v\n", lerr)
+		return
+	}
+
+	dbUri := os.Getenv("MONGO_URI")
+
+	client, connerr := mongo.Connect(ctx, options.Client().ApplyURI(dbUri))
+	if connerr != nil {
+		log.Printf("failed to connect to database: %v\n", connerr)
+		return
+	}
+	defer func() {
+		derr := client.Disconnect(ctx)
+		if derr != nil {
+			log.Printf("failed to disconnect: %v\n", derr)
+		}
+	}()
+
+	perr := client.Ping(ctx, nil)
+	if perr != nil {
+		log.Printf("failed to ping database %v\n", perr)
+	}
+
+	db := client.Database("inventory")
+
+	repo := partRepository.NewRepository(db)
+	ierr := repo.InitParts(ctx)
+	if ierr != nil {
+		log.Printf("failed to init parts: %v\n", ierr)
+	}
+
 	service := partService.NewService(repo)
 	api := partV1API.NewAPI(service)
 

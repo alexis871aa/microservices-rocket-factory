@@ -13,6 +13,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -20,6 +23,7 @@ import (
 	inventoryClient "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/inventory/v1"
 	paymentClient "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/payment/v1"
 	customMiddleware "github.com/alexis871aa/microservices-rocket-factory/order/internal/middleware"
+	"github.com/alexis871aa/microservices-rocket-factory/order/internal/migrator"
 	orderRepository "github.com/alexis871aa/microservices-rocket-factory/order/internal/repository/order"
 	orderService "github.com/alexis871aa/microservices-rocket-factory/order/internal/service/order"
 	orderV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/openapi/order/v1"
@@ -28,15 +32,29 @@ import (
 )
 
 const (
-	httpPort      = "8080"
-	inventoryAddr = "localhost:50051"
-	paymentAddr   = "localhost:50052"
+	httpPort = "8080"
 	// Таймауты для HTTP-сервера
 	readHeaderTimeout = 5 * time.Second
 	shutdownTimeout   = 10 * time.Second
 )
 
 func main() {
+	ctx := context.Background()
+	envPaths := []string{"../../.env", "../.env", ".env"}
+	var enverr error
+	for _, path := range envPaths {
+		enverr = godotenv.Load(path)
+		if enverr == nil {
+			log.Printf("✅ Загружен .env файл: %s\n", path)
+			break
+		}
+	}
+	if enverr != nil {
+		log.Printf("❌ Не удалось найти .env файл: %v\n", enverr)
+		return
+	}
+
+	inventoryAddr := os.Getenv("INVENTORY_ADDR")
 	inventoryConn, err := grpc.NewClient(
 		inventoryAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -51,6 +69,7 @@ func main() {
 		}
 	}()
 
+	paymentAddr := os.Getenv("PAYMENT_ADDR")
 	paymentConn, err := grpc.NewClient(
 		paymentAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -65,7 +84,35 @@ func main() {
 		}
 	}()
 
-	repo := orderRepository.NewRepository()
+	dbURI := os.Getenv("DB_URI")
+	dbConn, conErr := pgx.Connect(ctx, dbURI)
+	if conErr != nil {
+		log.Printf("failed to connect to database: %v\n", conErr)
+		return
+	}
+	defer func() {
+		cerr := dbConn.Close(ctx)
+		if cerr != nil {
+			log.Printf("failed to close database connection: %v\n", cerr)
+		}
+	}()
+
+	perr := dbConn.Ping(ctx)
+	if perr != nil {
+		log.Printf("failed to ping database connection: %v\n", perr)
+		return
+	}
+
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	migratorRunner := migrator.NewMigrator(stdlib.OpenDB(*dbConn.Config().Copy()), migrationsDir)
+
+	merr := migratorRunner.Up()
+	if merr != nil {
+		log.Printf("failed to run migrations: %v\n", merr)
+		return
+	}
+
+	repo := orderRepository.NewRepository(stdlib.OpenDB(*dbConn.Config().Copy()))
 	service := orderService.NewService(
 		repo,
 		inventoryClient.NewClient(inventoryV1.NewInventoryServiceClient(inventoryConn)),

@@ -1,6 +1,7 @@
 package part
 
 import (
+	"context"
 	"math"
 	"time"
 
@@ -11,12 +12,16 @@ import (
 	repoModel "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/model"
 )
 
-func (r *repository) InitParts() {
+func (r *repository) InitParts(ctx context.Context) error {
 	parts := generateParts()
 
 	for _, part := range parts {
-		r.data[part.Uuid] = part
+		_, err := r.collection.InsertOne(ctx, part)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func generateParts() []repoModel.Part {

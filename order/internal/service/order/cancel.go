@@ -9,26 +9,34 @@ import (
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
 )
 
+func statusToError(status model.OrderStatus) error {
+	statusToError := map[model.OrderStatus]error{
+		model.StatusPaid:      model.ErrOrderAlreadyPaid,
+		model.StatusCancelled: model.ErrOrderCancelled,
+	}
+
+	if err, ok := statusToError[status]; ok {
+		return err
+	}
+
+	if status != model.StatusPendingPayment {
+		return model.ErrInvalidOrderStatus
+	}
+
+	return nil
+}
+
 func (s *service) Cancel(ctx context.Context, orderUUID string) error {
 	order, err := s.Get(ctx, orderUUID)
 	if err != nil {
 		return err
 	}
 
-	switch order.Status {
-	case model.StatusPaid:
-		return model.ErrOrderAlreadyPaid
-	case model.StatusCancelled:
-		return model.ErrOrderCancelled
-	case model.StatusPendingPayment:
-		order.Status = model.StatusCancelled
-		order.UpdatedAt = lo.ToPtr(time.Now())
-		err = s.orderRepository.Update(ctx, orderUUID, *order)
-		if err != nil {
-			return err
-		}
-		return nil
-	default:
-		return model.ErrInvalidOrderStatus
+	if err := statusToError(order.Status); err != nil {
+		return err
 	}
+
+	order.Status = model.StatusCancelled
+	order.UpdatedAt = lo.ToPtr(time.Now())
+	return s.orderRepository.Update(ctx, orderUUID, *order)
 }
