@@ -9,22 +9,27 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	partV1API "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/api/inventory/v1"
+	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/config"
 	partRepository "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/repository/part"
 	partService "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service/part"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
 
-const grpcPort = 50051
+const configPath = "./deploy/compose/inventory/.env"
 
 func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+	err := config.Load(configPath)
+	if err != nil {
+		panic(fmt.Errorf("failed to load config: %w", err))
+	}
+
+	lis, err := net.Listen("tcp", config.AppConfig().InventoryGRPC.Address())
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 		return
@@ -38,45 +43,29 @@ func main() {
 	s := grpc.NewServer()
 
 	ctx := context.Background()
-	envPaths := []string{"../../.env", "../.env", ".env"}
-	var lerr error
-	for _, path := range envPaths {
-		lerr = godotenv.Load(path)
-		if lerr == nil {
-			log.Printf("✅ Загружен .env файл: %s\n", path)
-			break
-		}
-	}
-	if lerr != nil {
-		log.Printf("❌ Не удалось найти .env файл: %v\n", lerr)
-		return
-	}
-
-	dbUri := os.Getenv("MONGO_URI")
-
-	client, connerr := mongo.Connect(ctx, options.Client().ApplyURI(dbUri))
-	if connerr != nil {
-		log.Printf("failed to connect to database: %v\n", connerr)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.AppConfig().Mongo.URI()))
+	if err != nil {
+		log.Printf("failed to connect to database: %v\n", err)
 		return
 	}
 	defer func() {
-		derr := client.Disconnect(ctx)
-		if derr != nil {
-			log.Printf("failed to disconnect: %v\n", derr)
+		err := client.Disconnect(ctx)
+		if err != nil {
+			log.Printf("failed to disconnect: %v\n", err)
 		}
 	}()
 
-	perr := client.Ping(ctx, nil)
-	if perr != nil {
-		log.Printf("failed to ping database %v\n", perr)
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Printf("failed to ping database %v\n", err)
 	}
 
 	db := client.Database("inventory")
 
 	repo := partRepository.NewRepository(db)
-	ierr := repo.InitParts(ctx)
-	if ierr != nil {
-		log.Printf("failed to init parts: %v\n", ierr)
+	err = repo.InitParts(ctx)
+	if err != nil {
+		log.Printf("failed to init parts: %v\n", err)
 	}
 
 	service := partService.NewService(repo)
@@ -87,7 +76,7 @@ func main() {
 	reflection.Register(s)
 
 	go func() {
-		log.Printf("starting InventoryService server on port %d", grpcPort)
+		log.Printf("starting InventoryService server on port %s", config.AppConfig().InventoryGRPC.Address())
 		err = s.Serve(lis)
 		if err != nil {
 			log.Fatalf("failed to serve: %v", err)
