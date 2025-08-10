@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-20250729201306-68bc1ee8e5e8
 	github.com/brianvoe/gofakeit/v7 v7.3.0
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.4
