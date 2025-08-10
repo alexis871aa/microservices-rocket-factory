@@ -35,8 +35,8 @@ func main() {
 		return
 	}
 	defer func() {
-		if cerr := lis.Close(); cerr != nil {
-			log.Printf("failed to close listener: %v", cerr)
+		if err := lis.Close(); err != nil {
+			log.Printf("failed to close listener: %v", err)
 		}
 	}()
 
