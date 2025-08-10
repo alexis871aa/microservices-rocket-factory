@@ -24,3 +24,7 @@ func NewInventoryGRPCConfig() (*inventoryGRPCConfig, error) {
 func (cfg *inventoryGRPCConfig) Address() string {
 	return cfg.raw.Host + ":" + cfg.raw.Port
 }
+
+func (cfg *inventoryGRPCConfig) Port() string {
+	return cfg.raw.Port
+}

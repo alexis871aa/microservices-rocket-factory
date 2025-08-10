@@ -7,6 +7,7 @@ type LoggerConfig interface {
 
 type InventoryGRPCConfig interface {
 	Address() string
+	Port() string
 }
 
 type MongoConfig interface {

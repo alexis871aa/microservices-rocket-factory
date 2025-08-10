@@ -76,7 +76,7 @@ func main() {
 	reflection.Register(s)
 
 	go func() {
-		log.Printf("starting InventoryService server on port %s", config.AppConfig().InventoryGRPC.Address())
+		log.Printf("starting InventoryService server on port %s", config.AppConfig().InventoryGRPC.Port())
 		err = s.Serve(lis)
 		if err != nil {
 			log.Fatalf("failed to serve: %v", err)
