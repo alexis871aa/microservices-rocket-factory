@@ -15,7 +15,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -38,21 +37,15 @@ const (
 	shutdownTimeout   = 10 * time.Second
 )
 
+const configPath = "./deploy/compose/order/.env"
+
 func main() {
 	ctx := context.Background()
-	envPaths := []string{"../../.env", "../.env", ".env"}
-	var enverr error
-	for _, path := range envPaths {
-		enverr = godotenv.Load(path)
-		if enverr == nil {
-			log.Printf("✅ Загружен .env файл: %s\n", path)
-			break
-		}
-	}
-	if enverr != nil {
-		log.Printf("❌ Не удалось найти .env файл: %v\n", enverr)
-		return
-	}
+
+	//err := config.Load(configPath)
+	//if err != nil {
+	//	panic(fmt.Errorf("failed to load config: %w", err))
+	//}
 
 	inventoryAddr := os.Getenv("INVENTORY_ADDR")
 	inventoryConn, err := grpc.NewClient(
@@ -64,8 +57,8 @@ func main() {
 		return
 	}
 	defer func() {
-		if ierr := inventoryConn.Close(); ierr != nil {
-			log.Printf("failed to close inventory connection: %v\n", ierr)
+		if err := inventoryConn.Close(); err != nil {
+			log.Printf("failed to close inventory connection: %v\n", err)
 		}
 	}()
 
@@ -79,36 +72,36 @@ func main() {
 		return
 	}
 	defer func() {
-		if perr := paymentConn.Close(); perr != nil {
-			log.Printf("failed to close payment connection: %v\n", perr)
+		if err := paymentConn.Close(); err != nil {
+			log.Printf("failed to close payment connection: %v\n", err)
 		}
 	}()
 
 	dbURI := os.Getenv("DB_URI")
-	dbConn, conErr := pgx.Connect(ctx, dbURI)
-	if conErr != nil {
-		log.Printf("failed to connect to database: %v\n", conErr)
+	dbConn, err := pgx.Connect(ctx, dbURI)
+	if err != nil {
+		log.Printf("failed to connect to database: %v\n", err)
 		return
 	}
 	defer func() {
-		cerr := dbConn.Close(ctx)
-		if cerr != nil {
-			log.Printf("failed to close database connection: %v\n", cerr)
+		err := dbConn.Close(ctx)
+		if err != nil {
+			log.Printf("failed to close database connection: %v\n", err)
 		}
 	}()
 
-	perr := dbConn.Ping(ctx)
-	if perr != nil {
-		log.Printf("failed to ping database connection: %v\n", perr)
+	err = dbConn.Ping(ctx)
+	if err != nil {
+		log.Printf("failed to ping database connection: %v\n", err)
 		return
 	}
 
 	migrationsDir := os.Getenv("MIGRATIONS_DIR")
 	migratorRunner := migrator.NewMigrator(stdlib.OpenDB(*dbConn.Config().Copy()), migrationsDir)
 
-	merr := migratorRunner.Up()
-	if merr != nil {
-		log.Printf("failed to run migrations: %v\n", merr)
+	err = migratorRunner.Up()
+	if err != nil {
+		log.Printf("failed to run migrations: %v\n", err)
 		return
 	}
 
