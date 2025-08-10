@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,6 +21,7 @@ import (
 	orderV1API "github.com/alexis871aa/microservices-rocket-factory/order/internal/api/order/v1"
 	inventoryClient "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/inventory/v1"
 	paymentClient "github.com/alexis871aa/microservices-rocket-factory/order/internal/client/grpc/payment/v1"
+	"github.com/alexis871aa/microservices-rocket-factory/order/internal/config"
 	customMiddleware "github.com/alexis871aa/microservices-rocket-factory/order/internal/middleware"
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/migrator"
 	orderRepository "github.com/alexis871aa/microservices-rocket-factory/order/internal/repository/order"
@@ -30,26 +31,16 @@ import (
 	paymentV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/payment/v1"
 )
 
-const (
-	httpPort = "8080"
-	// Таймауты для HTTP-сервера
-	readHeaderTimeout = 5 * time.Second
-	shutdownTimeout   = 10 * time.Second
-)
-
 const configPath = "./deploy/compose/order/.env"
 
 func main() {
-	ctx := context.Background()
+	err := config.Load(configPath)
+	if err != nil {
+		panic(fmt.Errorf("failed to load config: %w", err))
+	}
 
-	//err := config.Load(configPath)
-	//if err != nil {
-	//	panic(fmt.Errorf("failed to load config: %w", err))
-	//}
-
-	inventoryAddr := os.Getenv("INVENTORY_ADDR")
 	inventoryConn, err := grpc.NewClient(
-		inventoryAddr,
+		config.AppConfig().InventoryClient.Address(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -62,9 +53,8 @@ func main() {
 		}
 	}()
 
-	paymentAddr := os.Getenv("PAYMENT_ADDR")
 	paymentConn, err := grpc.NewClient(
-		paymentAddr,
+		config.AppConfig().PaymentClient.Address(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -77,8 +67,8 @@ func main() {
 		}
 	}()
 
-	dbURI := os.Getenv("DB_URI")
-	dbConn, err := pgx.Connect(ctx, dbURI)
+	ctx := context.Background()
+	dbConn, err := pgx.Connect(ctx, config.AppConfig().Postgres.URI())
 	if err != nil {
 		log.Printf("failed to connect to database: %v\n", err)
 		return
@@ -96,9 +86,7 @@ func main() {
 		return
 	}
 
-	migrationsDir := os.Getenv("MIGRATIONS_DIR")
-	migratorRunner := migrator.NewMigrator(stdlib.OpenDB(*dbConn.Config().Copy()), migrationsDir)
-
+	migratorRunner := migrator.NewMigrator(stdlib.OpenDB(*dbConn.Config().Copy()), config.AppConfig().Postgres.MigrationsDir())
 	err = migratorRunner.Up()
 	if err != nil {
 		log.Printf("failed to run migrations: %v\n", err)
@@ -111,8 +99,8 @@ func main() {
 		inventoryClient.NewClient(inventoryV1.NewInventoryServiceClient(inventoryConn)),
 		paymentClient.NewClient(paymentV1.NewPaymentServiceClient(paymentConn)),
 	)
-	api := orderV1API.NewAPI(service)
 
+	api := orderV1API.NewAPI(service)
 	orderServer, err := orderV1.NewServer(api)
 	if err != nil {
 		log.Printf("ошибка создания сервера OpenAPI: %v", err)
@@ -128,13 +116,13 @@ func main() {
 	r.Mount("/", orderServer)
 
 	server := &http.Server{
-		Addr:              net.JoinHostPort("localhost", httpPort),
+		Addr:              config.AppConfig().OrderHTTP.Address(),
 		Handler:           r,
-		ReadHeaderTimeout: readHeaderTimeout,
+		ReadHeaderTimeout: config.AppConfig().OrderHTTP.ReadTimeout(),
 	}
 
 	go func() {
-		log.Printf("🚀 HTTP-сервер запущен на порту %s\n", httpPort)
+		log.Printf("🚀 HTTP-сервер запущен на порту %s\n", config.AppConfig().OrderHTTP.Port())
 		err = server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("❌ Ошибка запуска http сервера: %v\n", err)
@@ -147,7 +135,7 @@ func main() {
 
 	log.Println("🛑 Завершение работы http сервера...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), config.AppConfig().OrderHTTP.ShutdownTimeout())
 	defer cancel()
 
 	err = server.Shutdown(ctx)
