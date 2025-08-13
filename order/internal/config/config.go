@@ -11,8 +11,8 @@ import (
 var appConfig *config
 
 type config struct {
-	InventoryClient InventoryClientConfig
-	PaymentClient   PaymentClientConfig
+	InventoryClient InventoryGRPCClientConfig
+	PaymentClient   PaymentGRPCClientConfig
 	OrderHTTP       OrderHTTPConfig
 	Logger          LoggerConfig
 	Postgres        PostgresConfig
