@@ -12,6 +12,10 @@ packages:
     config:
       include-regex: ".*Service|.*Repository"
 
+  github.com/alexis871aa/microservices-rocket-factory/inventory/internal/config:
+    config:
+      include-regex: ".*Config"
+
   github.com/alexis871aa/microservices-rocket-factory/order/internal/service:
     config:
       include-regex: ".*Service|.*Repository"
@@ -20,9 +24,17 @@ packages:
     config:
       include-regex: ".*Client"
 
+  github.com/alexis871aa/microservices-rocket-factory/order/internal/config:
+    config:
+      include-regex: ".*Config"
+
   github.com/alexis871aa/microservices-rocket-factory/payment/internal/service:
     config:
       include-regex: ".*Service"
+
+  github.com/alexis871aa/microservices-rocket-factory/payment/internal/config:
+    config:
+      include-regex: ".*Config"
 
   github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1:
     config:
