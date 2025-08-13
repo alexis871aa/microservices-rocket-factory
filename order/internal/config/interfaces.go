@@ -2,11 +2,11 @@ package config
 
 import "time"
 
-type InventoryClientConfig interface {
+type InventoryGRPCClientConfig interface {
 	Address() string
 }
 
-type PaymentClientConfig interface {
+type PaymentGRPCClientConfig interface {
 	Address() string
 }
 
