@@ -18,10 +18,8 @@ import (
 )
 
 type diContainer struct {
-	inventoryV1API inventoryV1.InventoryServiceServer
-
-	inventoryService service.InventoryService
-
+	inventoryV1API      inventoryV1.InventoryServiceServer
+	inventoryService    service.InventoryService
 	inventoryRepository service.InventoryRepository
 
 	mongoDBClient *mongo.Client
