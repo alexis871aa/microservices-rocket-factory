@@ -92,7 +92,7 @@ func (a *App) initListener(_ context.Context) error {
 	return nil
 }
 
-func (a *App) initGRPCServer(_ context.Context) error {
+func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 	closer.AddNamed("gRPC server", func(ctx context.Context) error {
 		a.grpcServer.GracefulStop()
@@ -104,7 +104,7 @@ func (a *App) initGRPCServer(_ context.Context) error {
 	// регистрируем health service для проверки работоспособности
 	health.RegisterService(a.grpcServer)
 
-	inventoryV1.RegisterInventoryServiceServer(a.grpcServer, a.diContainer.inventoryV1API)
+	inventoryV1.RegisterInventoryServiceServer(a.grpcServer, a.diContainer.InventoryV1API(ctx))
 
 	return nil
 }
