@@ -11,7 +11,7 @@ import (
 	def "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service"
 )
 
-var _ def.PartRepository = (*repository)(nil)
+var _ def.InventoryRepository = (*repository)(nil)
 
 type repository struct {
 	collection *mongo.Collection
