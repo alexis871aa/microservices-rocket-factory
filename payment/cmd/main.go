@@ -1,20 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"net"
-	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"go.uber.org/zap"
 
-	paymentV1API "github.com/alexis871aa/microservices-rocket-factory/payment/internal/api/payment/v1"
+	"github.com/alexis871aa/microservices-rocket-factory/payment/internal/app"
 	"github.com/alexis871aa/microservices-rocket-factory/payment/internal/config"
-	paymentService "github.com/alexis871aa/microservices-rocket-factory/payment/internal/service/payment"
-	paymentV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/payment/v1"
+	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/closer"
+	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 )
 
 const configPath = "./deploy/compose/payment/.env"
@@ -25,39 +23,30 @@ func main() {
 		panic(fmt.Errorf("failed to load config: %w", err))
 	}
 
-	lis, err := net.Listen("tcp", config.AppConfig().PaymentGRPC.Address())
+	appCtx, appCancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer appCancel()
+	defer gracefulShutdown()
+
+	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
+
+	a, err := app.New(appCtx)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Error(appCtx, "❌ Не удалось создать приложение", zap.Error(err))
 		return
 	}
-	defer func() {
-		if err := lis.Close(); err != nil {
-			log.Printf("failed to close listener: %v", err)
-		}
-	}()
 
-	s := grpc.NewServer()
+	err = a.Run(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "❌ Ошибка при работе приложения", zap.Error(err))
+		return
+	}
+}
 
-	service := paymentService.NewService()
-	api := paymentV1API.NewAPI(service)
+func gracefulShutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	paymentV1.RegisterPaymentServiceServer(s, api)
-
-	reflection.Register(s)
-
-	go func() {
-		log.Printf("starting PaymentService server on port %s", config.AppConfig().PaymentGRPC.Port())
-		err = s.Serve(lis)
-		if err != nil {
-			log.Fatalf("failed to serve: %v", err)
-			return
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("🛑 Shutting down PaymentService server...")
-	s.GracefulStop()
-	log.Println("✅ Server stopped")
+	if err := closer.CloseAll(ctx); err != nil {
+		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
+	}
 }
