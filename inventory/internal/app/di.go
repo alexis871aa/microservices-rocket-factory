@@ -50,7 +50,14 @@ func (d *diContainer) InventoryService(ctx context.Context) service.InventorySer
 
 func (d *diContainer) InventoryRepository(ctx context.Context) service.InventoryRepository {
 	if d.inventoryRepository == nil {
-		d.inventoryRepository = inventoryRepository.NewRepository(d.MongoDBHandle(ctx))
+		repo := inventoryRepository.NewRepository(d.MongoDBHandle(ctx))
+
+		err := repo.InitParts(ctx)
+		if err != nil {
+			panic(fmt.Sprintf("failed to init parts: %v\n", err))
+		}
+
+		d.inventoryRepository = repo
 	}
 
 	return d.inventoryRepository
