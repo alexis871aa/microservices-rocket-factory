@@ -16,6 +16,6 @@ func RequestLogger(next http.Handler) http.Handler {
 
 		duration := time.Since(startTime)
 
-		log.Printf("✅ Запрос завершен: %s %s, время выполнения: %v", r.Method, r.URL.Path, duration)
+		log.Printf("📡 Запрос завершен: %s %s, время выполнения: %v", r.Method, r.URL.Path, duration)
 	})
 }

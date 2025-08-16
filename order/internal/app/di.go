@@ -61,7 +61,7 @@ func (d *diContainer) OrderV1Server(ctx context.Context) *orderV1.Server {
 	if d.orderV1Server == nil {
 		server, err := orderV1.NewServer(d.OrderV1API(ctx))
 		if err != nil {
-			panic(fmt.Sprintf("failed to create OrderV1 server: %v", err))
+			panic(fmt.Sprintf("💥 failed to create OrderV1 server: %v", err))
 		}
 		d.orderV1Server = server
 	}
@@ -113,12 +113,12 @@ func (d *diContainer) PgxConn(ctx context.Context) *pgx.Conn {
 	if d.pgxConn == nil {
 		conn, err := pgx.Connect(ctx, config.AppConfig().Postgres.URI())
 		if err != nil {
-			panic(fmt.Sprintf("failed to connect to database: %v", err))
+			panic(fmt.Sprintf("💥 failed to connect to database: %v", err))
 		}
 
 		err = conn.Ping(ctx)
 		if err != nil {
-			panic(fmt.Sprintf("failed to ping database: %v", err))
+			panic(fmt.Sprintf("💥 failed to ping database: %v", err))
 		}
 
 		closer.AddNamed("PostgreSQL connection", func(ctx context.Context) error {
@@ -137,7 +137,7 @@ func (d *diContainer) InventoryGRPCConn(_ context.Context) *grpc.ClientConn {
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
-			panic(fmt.Sprintf("failed to connect to inventory service: %v", err))
+			panic(fmt.Sprintf("💥 failed to connect to inventory service: %v", err))
 		}
 
 		closer.AddNamed("Inventory gRPC connection", func(ctx context.Context) error {
@@ -156,7 +156,7 @@ func (d *diContainer) PaymentGRPCConn(_ context.Context) *grpc.ClientConn {
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
-			panic(fmt.Sprintf("failed to connect to payment service: %v", err))
+			panic(fmt.Sprintf("💥 failed to connect to payment service: %v", err))
 		}
 
 		closer.AddNamed("Payment gRPC connection", func(ctx context.Context) error {

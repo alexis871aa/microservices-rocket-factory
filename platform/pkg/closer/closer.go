@@ -98,7 +98,7 @@ func (c *Closer) handleSignals(signals ...os.Signal) {
 		defer shutdownCancel()
 
 		if err := c.CloseAll(shutdownCtx); err != nil {
-			c.logger.Error(context.Background(), "❌ Ошибка при закрытии ресурсов: %v", zap.Error(err))
+			c.logger.Error(context.Background(), "💥 Ошибка при закрытии ресурсов: %v", zap.Error(err))
 		}
 
 	case <-c.done:
@@ -110,13 +110,13 @@ func (c *Closer) handleSignals(signals ...os.Signal) {
 func (c *Closer) AddNamed(name string, f func(context.Context) error) {
 	c.Add(func(ctx context.Context) error {
 		start := time.Now()
-		c.logger.Info(ctx, fmt.Sprintf("🧩 Закрываем %s...", name))
+		c.logger.Info(ctx, fmt.Sprintf("🔧 Закрываем %s...", name))
 
 		err := f(ctx)
 
 		duration := time.Since(start)
 		if err != nil {
-			c.logger.Error(ctx, fmt.Sprintf("❌ Ошибка при закрытии %s: %v (заняло %s)", name, err, duration))
+			c.logger.Error(ctx, fmt.Sprintf("💥 Ошибка при закрытии %s: %v (заняло %s)", name, err, duration))
 		} else {
 			c.logger.Info(ctx, fmt.Sprintf("✅ %s успешно закрыт за %s", name, duration))
 		}
@@ -195,7 +195,7 @@ func (c *Closer) CloseAll(ctx context.Context) error {
 					c.logger.Info(ctx, "✅ Все ресурсы успешно закрыты")
 					return
 				}
-				c.logger.Error(ctx, "❌ Ошибка при закрытии", zap.Error(err))
+				c.logger.Error(ctx, "💥 Ошибка при закрытии", zap.Error(err))
 				if result == nil {
 					result = err
 				}

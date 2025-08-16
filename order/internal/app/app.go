@@ -83,7 +83,7 @@ func (a *App) initDatabase(ctx context.Context) error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	logger.Info(ctx, "✅ Database initialized and migrations applied")
+	logger.Info(ctx, "🗄️ Database initialized and migrations applied")
 	return nil
 }
 

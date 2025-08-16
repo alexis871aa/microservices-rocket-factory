@@ -31,13 +31,13 @@ func main() {
 
 	a, err := app.New(appCtx)
 	if err != nil {
-		logger.Error(appCtx, "❌ Не удалось создать приложение", zap.Error(err))
+		logger.Error(appCtx, "💥 Не удалось создать приложение", zap.Error(err))
 		return
 	}
 
 	err = a.Run(appCtx)
 	if err != nil {
-		logger.Error(appCtx, "❌ Ошибка при работе приложения", zap.Error(err))
+		logger.Error(appCtx, "💥 Ошибка при работе приложения", zap.Error(err))
 		return
 	}
 }
@@ -47,6 +47,6 @@ func gracefulShutdown() {
 	defer cancel()
 
 	if err := closer.CloseAll(ctx); err != nil {
-		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
+		logger.Error(ctx, "💥 Ошибка при завершении работы", zap.Error(err))
 	}
 }

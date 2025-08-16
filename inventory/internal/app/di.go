@@ -73,12 +73,12 @@ func (d *diContainer) MongoDBClient(ctx context.Context) *mongo.Client {
 	if d.mongoDBClient == nil {
 		client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.AppConfig().Mongo.URI()))
 		if err != nil {
-			panic(fmt.Sprintf("failed to connect to MongoDB: %s\n", err.Error()))
+			panic(fmt.Sprintf("💥 failed to connect to MongoDB: %s\n", err.Error()))
 		}
 
 		err = client.Ping(ctx, readpref.Primary())
 		if err != nil {
-			panic(fmt.Sprintf("failed to ping MongoDB: %v\n", err))
+			panic(fmt.Sprintf("💥 failed to ping MongoDB: %v\n", err))
 		}
 
 		closer.AddNamed("MongoDB client", func(ctx context.Context) error {
