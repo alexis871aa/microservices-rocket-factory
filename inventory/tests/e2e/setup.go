@@ -5,15 +5,16 @@ import (
 	"os"
 	"time"
 
+	"github.com/docker/go-connections/nat"
+	"github.com/testcontainers/testcontainers-go/wait"
+	"go.uber.org/zap"
+
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/testcontainers"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/testcontainers/app"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/testcontainers/mongo"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/testcontainers/network"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/testcontainers/path"
-	"github.com/docker/go-connections/nat"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"go.uber.org/zap"
 )
 
 const (
