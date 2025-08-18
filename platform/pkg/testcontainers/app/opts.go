@@ -27,6 +27,12 @@ func WithPort(port string) Option {
 	}
 }
 
+func WithNetwork(name string) Option {
+	return func(c *Config) {
+		c.Networks = append(c.Networks, name)
+	}
+}
+
 func WithEnv(env map[string]string) Option {
 	return func(c *Config) {
 		for k, v := range env {
