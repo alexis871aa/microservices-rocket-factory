@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -48,7 +49,10 @@ func (d *diContainer) InventoryService(ctx context.Context) service.InventorySer
 
 func (d *diContainer) InventoryRepository(ctx context.Context) service.InventoryRepository {
 	if d.inventoryRepository == nil {
-		repo := inventoryRepository.NewRepository(d.MongoDBHandle(ctx))
+		repoCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+
+		repo := inventoryRepository.NewRepository(repoCtx, d.MongoDBHandle(ctx))
 
 		err := repo.InitParts(ctx)
 		if err != nil {
