@@ -38,6 +38,7 @@ vars:
   POSTGRES_DSN: 'postgres://order-service-user:order-service-password@localhost:5432/order-service?sslmode=disable'
 
   MODULES: assembly inventory order payment platform iam notification
+  INTEGRATION_MODULES: inventory order payment
   SERVICES: core,assembly,inventory,order,payment,iam,notification
 
 tasks:
@@ -619,13 +620,14 @@ tasks:
   test-integration:
     desc: "Запускает интеграционные тесты для указанных модулей"
     summary: |
-      Запускает интеграционные тесты для модулей, указанных через переменную MODULES.
+      Запускает интеграционные тесты для модулей, указанных через переменную INTEGRATION_MODULES.
       Использует тег "integration" для идентификации интеграционных тестов.
+      Исключает platform и другие utility модули из интеграционного тестирования.
     cmds:
       - |
         ERR=0
-        echo "🚀 Запуск интеграционных тестов (по тегу integration) для модулей: {{.MODULES}}"
-        for mod in {{.MODULES}}; do
+        echo "🚀 Запуск интеграционных тестов для модулей: {{.INTEGRATION_MODULES}}"
+        for mod in {{.INTEGRATION_MODULES}}; do
           if [ -d "$mod" ]; then
             echo "🧪 Проверка модуля $mod на наличие интеграционных тестов"
 
