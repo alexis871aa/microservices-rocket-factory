@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/docker/go-connections/nat"
@@ -75,10 +76,17 @@ func setupTestEnvironment(ctx context.Context) *TestEnvironment {
 	// Шаг 3. Запускаем контейнер с приложением
 	projectRoot := path.GetProjectRoot()
 
-	appEnv := map[string]string{
-		// Переопределяем хост MongoDB для подключения к контейнеру из testcontainers
-		testcontainers.MongoHostKey: generatedMongo.Config().ContainerName,
+	// Копируем все переменные окружения из процесса тестов
+	appEnv := make(map[string]string)
+	for _, env := range os.Environ() {
+		parts := strings.SplitN(env, "=", 2)
+		if len(parts) == 2 {
+			appEnv[parts[0]] = parts[1]
+		}
 	}
+
+	// Переопределяем хост MongoDB для подключения к контейнеру из testcontainers
+	appEnv[testcontainers.MongoHostKey] = generatedMongo.Config().ContainerName
 
 	// Создаём настраиваемую стратегию ожидания с увеличенным таймаутом
 	waitStrategy := wait.ForListeningPort(nat.Port(grpcPort + "/tcp")).
