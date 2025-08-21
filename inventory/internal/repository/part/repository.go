@@ -2,7 +2,6 @@ package part
 
 import (
 	"context"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,13 +10,13 @@ import (
 	def "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service"
 )
 
-var _ def.PartRepository = (*repository)(nil)
+var _ def.InventoryRepository = (*repository)(nil)
 
 type repository struct {
 	collection *mongo.Collection
 }
 
-func NewRepository(db *mongo.Database) *repository {
+func NewRepository(ctx context.Context, db *mongo.Database) *repository {
 	collection := db.Collection("parts")
 
 	indexModels := []mongo.IndexModel{
@@ -26,9 +25,6 @@ func NewRepository(db *mongo.Database) *repository {
 			Options: options.Index().SetUnique(false),
 		},
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	_, err := collection.Indexes().CreateMany(ctx, indexModels)
 	if err != nil {

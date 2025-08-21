@@ -4,16 +4,19 @@ go 1.24.4
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-20250729201306-68bc1ee8e5e8
+	github.com/alexis871aa/microservices-rocket-factory/platform v0.0.0-00010101000000-000000000000
+	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-20250808212652-d1eb6bf8f836
 	github.com/brianvoe/gofakeit/v7 v7.3.0
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.7.4
+	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/pressly/goose/v3 v3.24.3
 	github.com/samber/lo v1.51.0
 	github.com/stretchr/testify v1.10.0
+	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.74.2
 )
 
@@ -45,17 +48,18 @@ require (
 	go.opentelemetry.io/otel/metric v1.37.0 // indirect
 	go.opentelemetry.io/otel/trace v1.37.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.40.0 // indirect
-	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
-	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250811230008-5f3141c8851a // indirect
+	google.golang.org/protobuf v1.36.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/alexis871aa/microservices-rocket-factory/shared => ../shared
+
+replace github.com/alexis871aa/microservices-rocket-factory/platform => ../platform

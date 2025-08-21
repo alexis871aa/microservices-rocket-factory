@@ -14,6 +14,7 @@ vars:
   GRPCURL_VERSION: 'v1.9.3'
   CURL_VERSION: 'v0.9.2'
   MOCKERY_VERSION: 'v2.53.3'
+  ENVSUBST_VERSION: 'v1.4.3'
 
   BIN_DIR: '{{.ROOT_DIR}}/bin'
   GOLANGCI_LINT: '{{.BIN_DIR}}/golangci-lint'
@@ -27,6 +28,8 @@ vars:
   GRPCURL: '{{.BIN_DIR}}/grpcurl'
   CURL: '{{.BIN_DIR}}/curl'
   MOCKERY: '{{.BIN_DIR}}/mockery'
+  ENVSUBST: '{{.BIN_DIR}}/envsubst'
+  ENVDIR: '{{.ROOT_DIR}}/deploy/env'
 
   OPEN_API_ORDER_V1_BASE: '{{.ROOT_DIR}}/shared/api/order/v1/order.openapi.yaml'
   COVERAGE_DIR: '{{.ROOT_DIR}}/coverage'
@@ -35,6 +38,8 @@ vars:
   POSTGRES_DSN: 'postgres://order-service-user:order-service-password@localhost:5432/order-service?sslmode=disable'
 
   MODULES: assembly inventory order payment platform iam notification
+  INTEGRATION_MODULES: inventory order payment
+  SERVICES: core,assembly,inventory,order,payment,iam,notification
 
 tasks:
   install-formatters:
@@ -365,6 +370,41 @@ tasks:
       - task down-inventory
       - task down-order
 
+  env:install-envsubst:
+    desc: "Устанавливает envsubst в bin/"
+    cmds:
+      - |
+        [ -f {{.ENVSUBST}} ] || {
+          echo "📦 Устанавливаем envsubst версии {{.ENVSUBST_VERSION}}..."
+          GOBIN={{.BIN_DIR}} go install github.com/a8m/envsubst/cmd/envsubst@{{.ENVSUBST_VERSION}}
+        }
+        echo "✅ envsubst установлен: {{.ENVSUBST}}"
+
+  env:generate:
+    desc: "Генерирует .env файлы для всех сервисов из шаблонов и единого файла конфигурации"
+    deps: [ env:install-envsubst ]
+    cmds:
+      - |
+        ENV_FILE="{{.ENVDIR}}/.env"
+        TEMPLATE_FILE="{{.ENVDIR}}/.env.template"
+        SCRIPT="{{.ENVDIR}}/generate-env.sh"
+        
+        if [ ! -f "$ENV_FILE" ]; then
+          if [ -f "$TEMPLATE_FILE" ]; then
+            echo "🔄 Файл $ENV_FILE не найден, создаем из шаблона $TEMPLATE_FILE"
+            cp "$TEMPLATE_FILE" "$ENV_FILE"
+            echo "✅ Создан файл $ENV_FILE. Проверьте и отредактируйте значения переменных при необходимости."
+          else
+            echo "❌ Шаблон $TEMPLATE_FILE не найден!"
+            exit 1
+          fi
+        fi
+        
+        chmod +x "$SCRIPT"
+        # Передаем список сервисов в виде строки с разделителями-запятыми
+        export SERVICES="{{.SERVICES}}"
+        ENV_SUBST={{.ENVSUBST}} "$SCRIPT"
+
   test-api:
     desc: "🧪 Запуск тестов для проверки API микросервисов"
     deps: [ grpcurl:install, curl:install ]
@@ -558,3 +598,49 @@ tasks:
 
         echo
         echo "🎉 Все тесты API успешно выполнены!"
+
+  test-unit:
+    desc: "Запускает юнит-тесты для всех модулей"
+    summary: |
+      Запускает юнит-тесты для указанных модулей проекта.
+      Можно указать конкретные модули через переменную MODULES.
+      Исключаются интеграционные тесты в директориях integration и tests/integration.
+      Также исключаются тесты с тегом "integration".
+    cmds:
+      - |
+        ERR=0
+        for mod in {{.MODULES}}; do
+          if [ -d "$mod" ]; then
+            echo "🧪 Тестируем модуль $mod (только юнит-тесты)"
+            go test -v -tags="!integration" $(go list ./$mod/... | grep -v -E '(/integration|/tests/integration|/integrationtests)') || ERR=1
+          fi
+        done
+        exit $ERR
+
+  test-integration:
+    desc: "Запускает интеграционные тесты для указанных модулей"
+    summary: |
+      Запускает интеграционные тесты для модулей, указанных через переменную INTEGRATION_MODULES.
+      Использует тег "integration" для идентификации интеграционных тестов.
+      Исключает platform и другие utility модули из интеграционного тестирования.
+    cmds:
+      - |
+        ERR=0
+        echo "🚀 Запуск интеграционных тестов для модулей: {{.INTEGRATION_MODULES}}"
+        for mod in {{.INTEGRATION_MODULES}}; do
+          if [ -d "$mod" ]; then
+            echo "🧪 Проверка модуля $mod на наличие интеграционных тестов"
+
+            # Проверяем наличие файлов с тегом integration
+            HAS_TESTS=$(grep -r "//go:build integration" $mod --include="*.go" | wc -l)
+
+            if [ "$HAS_TESTS" -eq 0 ]; then
+              echo "⚠️ Модуль $mod не содержит интеграционных тестов (с тегом integration), пропускаем"
+              continue
+            fi
+
+            echo "▶️ Запуск интеграционных тестов для $mod"
+            go test -v -tags=integration ./$mod/... || ERR=1
+          fi
+        done
+        exit $ERR
