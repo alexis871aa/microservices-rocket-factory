@@ -6,7 +6,7 @@ import (
 )
 
 type orderPaidProducerEnvConfig struct {
-	TopicName string `env:"ORDER_PAID_TOPIC_NAME, required"`
+	TopicName string `env:"ORDER_PAID_TOPIC_NAME,required"`
 }
 
 type orderPaidProducerConfig struct {
