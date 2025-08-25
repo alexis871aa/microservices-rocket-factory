@@ -4,8 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/samber/lo"
 
+	"github.com/alexis871aa/microservices-rocket-factory/order/internal/converter"
 	"github.com/alexis871aa/microservices-rocket-factory/order/internal/model"
 )
 
@@ -41,9 +43,20 @@ func (s *service) Pay(ctx context.Context, orderUUID string, paymentMethod model
 	order.PaymentMethod = &paymentMethod
 	order.UpdatedAt = lo.ToPtr(time.Now())
 
-	uerr := s.orderRepository.Update(ctx, orderUUID, *order)
-	if uerr != nil {
-		return "", uerr
+	err = s.orderRepository.Update(ctx, orderUUID, *order)
+	if err != nil {
+		return "", err
+	}
+
+	err = s.orderProduceService.ProduceOrderPaid(ctx, model.OrderPaid{
+		EventUUID:       uuid.NewString(),
+		OrderUUID:       orderUUID,
+		UserUUID:        order.UserUUID,
+		PaymentMethod:   converter.PaymentMethodToString(paymentMethod),
+		TransactionUUID: transactionUUID,
+	})
+	if err != nil {
+		return "", err
 	}
 
 	return transactionUUID, nil

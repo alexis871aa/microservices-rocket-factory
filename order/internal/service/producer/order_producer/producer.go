@@ -34,6 +34,7 @@ func (p *service) ProduceOrderPaid(ctx context.Context, event model.OrderPaid) e
 	payload, err := proto.Marshal(msg)
 	if err != nil {
 		logger.Error(ctx, "failed to marshal order paid")
+		return err
 	}
 
 	err = p.orderProducer.Send(ctx, []byte(event.OrderUUID), payload)

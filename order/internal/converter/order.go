@@ -5,6 +5,14 @@ import (
 	orderV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/openapi/order/v1"
 )
 
+const (
+	Unknown      = "unknown"
+	Card         = "card"
+	Sbp          = "sbp"
+	CreditCard   = "credit-card"
+	InvestorCard = "investor-money"
+)
+
 func PaymentMethodToModel(apiMethod orderV1.PaymentMethod) model.PaymentMethod {
 	switch apiMethod {
 	case orderV1.PaymentMethodCARD:
@@ -69,5 +77,35 @@ func PaymentMethodToOrderDtoPaymentMethod(domainMethod model.PaymentMethod) orde
 		return orderV1.OrderDtoPaymentMethodINVESTORMONEY
 	default:
 		return orderV1.OrderDtoPaymentMethodUNKNOWN
+	}
+}
+
+func PaymentMethodToString(paymentMethod model.PaymentMethod) string {
+	switch paymentMethod {
+	case model.PaymentMethodCard:
+		return Card
+	case model.PaymentMethodSBP:
+		return Sbp
+	case model.PaymentMethodCreditCard:
+		return CreditCard
+	case model.PaymentMethodInvestorMoney:
+		return InvestorCard
+	default:
+		return Unknown
+	}
+}
+
+func PaymentMethodFromString(paymentMethod string) model.PaymentMethod {
+	switch paymentMethod {
+	case Card:
+		return model.PaymentMethodCard
+	case Sbp:
+		return model.PaymentMethodSBP
+	case CreditCard:
+		return model.PaymentMethodCreditCard
+	case InvestorCard:
+		return model.PaymentMethodInvestorMoney
+	default:
+		return model.PaymentMethodUnknown
 	}
 }
