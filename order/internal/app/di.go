@@ -89,7 +89,7 @@ func (d *diContainer) OrderV1Server(ctx context.Context) *orderV1.Server {
 
 func (d *diContainer) OrderService(ctx context.Context) service.OrderService {
 	if d.orderService == nil {
-		d.orderService = orderService.NewService(d.OrderRepository(ctx), d.InventoryClient(ctx), d.PaymentClient(ctx))
+		d.orderService = orderService.NewService(d.OrderRepository(ctx), d.InventoryClient(ctx), d.PaymentClient(ctx), d.OrderProducerService())
 	}
 
 	return d.orderService
@@ -103,9 +103,9 @@ func (d *diContainer) OrderProducerService() service.OrderProducerService {
 	return d.orderProducerService
 }
 
-func (d *diContainer) OrderConsumerService() service.OrderConsumerService {
+func (d *diContainer) OrderConsumerService(ctx context.Context) service.OrderConsumerService {
 	if d.orderConsumerService == nil {
-		d.orderConsumerService = orderConsumer.NewService(d.OrderConsumer(), d.OrderAssemblyDecoder())
+		d.orderConsumerService = orderConsumer.NewService(d.OrderConsumer(), d.OrderAssemblyDecoder(), d.OrderRepository(ctx))
 	}
 
 	return d.orderConsumerService
