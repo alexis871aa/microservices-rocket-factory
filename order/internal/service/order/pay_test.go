@@ -22,7 +22,8 @@ func Test_SuccessPayOrder(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -44,6 +45,7 @@ func Test_SuccessPayOrder(t *testing.T) {
 	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
 	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	orderProducerService.On("ProduceOrderPaid", ctx, mock.AnythingOfType("model.OrderPaid")).Return(nil).Once()
 
 	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
@@ -56,7 +58,8 @@ func Test_PayErrorWhenOrderNotFound(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	paymentMethod := model.PaymentMethodCard
@@ -75,7 +78,8 @@ func Test_PayErrorWhenOrderAlreadyPaid(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -104,7 +108,8 @@ func Test_PayErrorWhenOrderCancelled(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -130,7 +135,8 @@ func Test_PayErrorWhenPaymentClientFails(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -158,7 +164,8 @@ func Test_PayErrorWhenRepositoryUpdateFails(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -188,7 +195,8 @@ func Test_SuccessPayOrderWithSBP(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -204,6 +212,7 @@ func Test_SuccessPayOrderWithSBP(t *testing.T) {
 	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
 	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	orderProducerService.On("ProduceOrderPaid", ctx, mock.AnythingOfType("model.OrderPaid")).Return(nil).Once()
 
 	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
@@ -216,7 +225,8 @@ func Test_SuccessPayOrderWithCreditCard(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -232,6 +242,7 @@ func Test_SuccessPayOrderWithCreditCard(t *testing.T) {
 	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
 	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	orderProducerService.On("ProduceOrderPaid", ctx, mock.AnythingOfType("model.OrderPaid")).Return(nil).Once()
 
 	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
@@ -244,7 +255,8 @@ func Test_SuccessPayOrderWithInvestorMoney(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -260,6 +272,7 @@ func Test_SuccessPayOrderWithInvestorMoney(t *testing.T) {
 	orderRepository.On("Get", ctx, orderUUID).Return(existingOrder, nil).Once()
 	paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, paymentMethod).Return(transactionUUID, nil).Once()
 	orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.Order")).Return(nil).Once()
+	orderProducerService.On("ProduceOrderPaid", ctx, mock.AnythingOfType("model.OrderPaid")).Return(nil).Once()
 
 	result, err := service.Pay(ctx, orderUUID, paymentMethod)
 
