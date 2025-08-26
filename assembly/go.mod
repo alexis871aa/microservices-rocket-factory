@@ -8,6 +8,7 @@ require (
 	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-00010101000000-000000000000
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/joho/godotenv v1.5.1
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
 	google.golang.org/protobuf v1.36.8
