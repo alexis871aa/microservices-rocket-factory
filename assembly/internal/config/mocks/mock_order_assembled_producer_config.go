@@ -70,12 +70,12 @@ func (_c *OrderAssembledProducerConfig_Config_Call) RunAndReturn(run func() *sar
 	return _c
 }
 
-// TopicName provides a mock function with no fields
-func (_m *OrderAssembledProducerConfig) TopicName() string {
+// Topic provides a mock function with no fields
+func (_m *OrderAssembledProducerConfig) Topic() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for TopicName")
+		panic("no return value specified for Topic")
 	}
 
 	var r0 string
@@ -88,29 +88,29 @@ func (_m *OrderAssembledProducerConfig) TopicName() string {
 	return r0
 }
 
-// OrderAssembledProducerConfig_TopicName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'TopicName'
-type OrderAssembledProducerConfig_TopicName_Call struct {
+// OrderAssembledProducerConfig_Topic_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Topic'
+type OrderAssembledProducerConfig_Topic_Call struct {
 	*mock.Call
 }
 
-// TopicName is a helper method to define mock.On call
-func (_e *OrderAssembledProducerConfig_Expecter) TopicName() *OrderAssembledProducerConfig_TopicName_Call {
-	return &OrderAssembledProducerConfig_TopicName_Call{Call: _e.mock.On("TopicName")}
+// Topic is a helper method to define mock.On call
+func (_e *OrderAssembledProducerConfig_Expecter) Topic() *OrderAssembledProducerConfig_Topic_Call {
+	return &OrderAssembledProducerConfig_Topic_Call{Call: _e.mock.On("Topic")}
 }
 
-func (_c *OrderAssembledProducerConfig_TopicName_Call) Run(run func()) *OrderAssembledProducerConfig_TopicName_Call {
+func (_c *OrderAssembledProducerConfig_Topic_Call) Run(run func()) *OrderAssembledProducerConfig_Topic_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run()
 	})
 	return _c
 }
 
-func (_c *OrderAssembledProducerConfig_TopicName_Call) Return(_a0 string) *OrderAssembledProducerConfig_TopicName_Call {
+func (_c *OrderAssembledProducerConfig_Topic_Call) Return(_a0 string) *OrderAssembledProducerConfig_Topic_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *OrderAssembledProducerConfig_TopicName_Call) RunAndReturn(run func() string) *OrderAssembledProducerConfig_TopicName_Call {
+func (_c *OrderAssembledProducerConfig_Topic_Call) RunAndReturn(run func() string) *OrderAssembledProducerConfig_Topic_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -26,7 +26,7 @@ func (_m *OrderProducerService) EXPECT() *OrderProducerService_Expecter {
 }
 
 // ProduceShipAssembled provides a mock function with given fields: ctx, event
-func (_m *OrderProducerService) ProduceShipAssembled(ctx context.Context, event model.ShipAssembledEvent) error {
+func (_m *OrderProducerService) ProduceShipAssembled(ctx context.Context, event model.ShipAssembled) error {
 	ret := _m.Called(ctx, event)
 
 	if len(ret) == 0 {
@@ -34,7 +34,7 @@ func (_m *OrderProducerService) ProduceShipAssembled(ctx context.Context, event 
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, model.ShipAssembledEvent) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, model.ShipAssembled) error); ok {
 		r0 = rf(ctx, event)
 	} else {
 		r0 = ret.Error(0)
@@ -50,14 +50,14 @@ type OrderProducerService_ProduceShipAssembled_Call struct {
 
 // ProduceShipAssembled is a helper method to define mock.On call
 //   - ctx context.Context
-//   - event model.ShipAssembledEvent
+//   - event model.ShipAssembled
 func (_e *OrderProducerService_Expecter) ProduceShipAssembled(ctx interface{}, event interface{}) *OrderProducerService_ProduceShipAssembled_Call {
 	return &OrderProducerService_ProduceShipAssembled_Call{Call: _e.mock.On("ProduceShipAssembled", ctx, event)}
 }
 
-func (_c *OrderProducerService_ProduceShipAssembled_Call) Run(run func(ctx context.Context, event model.ShipAssembledEvent)) *OrderProducerService_ProduceShipAssembled_Call {
+func (_c *OrderProducerService_ProduceShipAssembled_Call) Run(run func(ctx context.Context, event model.ShipAssembled)) *OrderProducerService_ProduceShipAssembled_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(model.ShipAssembledEvent))
+		run(args[0].(context.Context), args[1].(model.ShipAssembled))
 	})
 	return _c
 }
@@ -67,7 +67,7 @@ func (_c *OrderProducerService_ProduceShipAssembled_Call) Return(_a0 error) *Ord
 	return _c
 }
 
-func (_c *OrderProducerService_ProduceShipAssembled_Call) RunAndReturn(run func(context.Context, model.ShipAssembledEvent) error) *OrderProducerService_ProduceShipAssembled_Call {
+func (_c *OrderProducerService_ProduceShipAssembled_Call) RunAndReturn(run func(context.Context, model.ShipAssembled) error) *OrderProducerService_ProduceShipAssembled_Call {
 	_c.Call.Return(run)
 	return _c
 }

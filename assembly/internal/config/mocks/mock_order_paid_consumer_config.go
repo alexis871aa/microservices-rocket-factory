@@ -115,12 +115,12 @@ func (_c *OrderPaidConsumerConfig_GroupID_Call) RunAndReturn(run func() string) 
 	return _c
 }
 
-// TopicName provides a mock function with no fields
-func (_m *OrderPaidConsumerConfig) TopicName() string {
+// Topic provides a mock function with no fields
+func (_m *OrderPaidConsumerConfig) Topic() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for TopicName")
+		panic("no return value specified for Topic")
 	}
 
 	var r0 string
@@ -133,29 +133,29 @@ func (_m *OrderPaidConsumerConfig) TopicName() string {
 	return r0
 }
 
-// OrderPaidConsumerConfig_TopicName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'TopicName'
-type OrderPaidConsumerConfig_TopicName_Call struct {
+// OrderPaidConsumerConfig_Topic_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Topic'
+type OrderPaidConsumerConfig_Topic_Call struct {
 	*mock.Call
 }
 
-// TopicName is a helper method to define mock.On call
-func (_e *OrderPaidConsumerConfig_Expecter) TopicName() *OrderPaidConsumerConfig_TopicName_Call {
-	return &OrderPaidConsumerConfig_TopicName_Call{Call: _e.mock.On("TopicName")}
+// Topic is a helper method to define mock.On call
+func (_e *OrderPaidConsumerConfig_Expecter) Topic() *OrderPaidConsumerConfig_Topic_Call {
+	return &OrderPaidConsumerConfig_Topic_Call{Call: _e.mock.On("Topic")}
 }
 
-func (_c *OrderPaidConsumerConfig_TopicName_Call) Run(run func()) *OrderPaidConsumerConfig_TopicName_Call {
+func (_c *OrderPaidConsumerConfig_Topic_Call) Run(run func()) *OrderPaidConsumerConfig_Topic_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run()
 	})
 	return _c
 }
 
-func (_c *OrderPaidConsumerConfig_TopicName_Call) Return(_a0 string) *OrderPaidConsumerConfig_TopicName_Call {
+func (_c *OrderPaidConsumerConfig_Topic_Call) Return(_a0 string) *OrderPaidConsumerConfig_Topic_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *OrderPaidConsumerConfig_TopicName_Call) RunAndReturn(run func() string) *OrderPaidConsumerConfig_TopicName_Call {
+func (_c *OrderPaidConsumerConfig_Topic_Call) RunAndReturn(run func() string) *OrderPaidConsumerConfig_Topic_Call {
 	_c.Call.Return(run)
 	return _c
 }
