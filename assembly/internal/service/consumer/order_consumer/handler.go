@@ -2,9 +2,12 @@ package order_consumer
 
 import (
 	"context"
+	"math/rand"
+	"time"
 
 	"go.uber.org/zap"
 
+	"github.com/alexis871aa/microservices-rocket-factory/assembly/internal/model"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/kafka"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 )
@@ -12,7 +15,7 @@ import (
 func (s *service) OrderHandler(ctx context.Context, msg kafka.Message) error {
 	event, err := s.orderPaidDecoder.Decode(msg.Value)
 	if err != nil {
-		logger.Error(ctx, "Failed to decode ")
+		logger.Error(ctx, "Failed to decode order paid event", zap.Error(err))
 		return err
 	}
 
@@ -27,28 +30,28 @@ func (s *service) OrderHandler(ctx context.Context, msg kafka.Message) error {
 	)
 
 	//nolint:gosec
-	//delay := time.Duration(rand.Intn(10)+1) * time.Second
-	//select {
-	//case <-time.After(delay):
-	//case <-ctx.Done():
-	//	return ctx.Err()
-	//}
+	delay := time.Duration(rand.Intn(10)+1) * time.Second
+	select {
+	case <-time.After(delay):
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 
-	//shipAssembled := model.ShipAssembled{
-	//	EventUUID:    event.EventUUID,
-	//	OrderUUID:    event.OrderUUID,
-	//	UserUUID:     event.UserUUID,
-	//	BuildTimeSec: int64(delay / time.Second),
-	//}
+	shipAssembled := model.ShipAssembled{
+		EventUUID:    event.EventUUID,
+		OrderUUID:    event.OrderUUID,
+		UserUUID:     event.UserUUID,
+		BuildTimeSec: int64(delay / time.Second),
+	}
 
-	//err = s.orderProducer.ProduceShipAssembled(ctx, shipAssembled)
-	//if err != nil {
-	//	logger.Error(ctx, "Failed to produce ship assembled event",
-	//		zap.Any("ship_assembled", shipAssembled),
-	//		zap.Error(err),
-	//	)
-	//	return err
-	//}
+	err = s.orderProducer.ProduceShipAssembled(ctx, shipAssembled)
+	if err != nil {
+		logger.Error(ctx, "Failed to produce ship assembled event",
+			zap.Any("ship_assembled", shipAssembled),
+			zap.Error(err),
+		)
+		return err
+	}
 
 	return nil
 }

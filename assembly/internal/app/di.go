@@ -46,7 +46,7 @@ func (d *diContainer) OrderProducerService() service.OrderProducerService {
 
 func (d *diContainer) OrderConsumerService() service.ConsumerService {
 	if d.orderConsumerService == nil {
-		d.orderConsumerService = orderConsumer.NewService(d.OrderPaidConsumer(), d.OrderPaidDecoder())
+		d.orderConsumerService = orderConsumer.NewService(d.OrderPaidConsumer(), d.OrderPaidDecoder(), d.OrderProducerService())
 	}
 
 	return d.orderConsumerService
