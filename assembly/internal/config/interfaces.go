@@ -8,12 +8,12 @@ type LoggerConfig interface {
 }
 
 type OrderAssembledProducerConfig interface {
-	TopicName() string
+	Topic() string
 	Config() *sarama.Config
 }
 
 type OrderPaidConsumerConfig interface {
-	TopicName() string
+	Topic() string
 	GroupID() string
 	Config() *sarama.Config
 }

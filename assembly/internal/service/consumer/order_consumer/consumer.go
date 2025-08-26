@@ -6,25 +6,22 @@ import (
 	"go.uber.org/zap"
 
 	kafkaConverter "github.com/alexis871aa/microservices-rocket-factory/assembly/internal/converter/kafka"
-	assemblyService "github.com/alexis871aa/microservices-rocket-factory/assembly/internal/service"
 	def "github.com/alexis871aa/microservices-rocket-factory/assembly/internal/service"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/kafka"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 )
 
-var _ def.OrderConsumerService = (*service)(nil)
+var _ def.ConsumerService = (*service)(nil)
 
 type service struct {
 	orderConsumer    kafka.Consumer
 	orderPaidDecoder kafkaConverter.OrderPaidDecoder
-	orderProducer    assemblyService.OrderProducerService
 }
 
-func NewService(orderConsumer kafka.Consumer, orderPaidDecoder kafkaConverter.OrderPaidDecoder, orderProducer assemblyService.OrderProducerService) *service {
+func NewService(orderConsumer kafka.Consumer, orderPaidDecoder kafkaConverter.OrderPaidDecoder) *service {
 	return &service{
 		orderConsumer:    orderConsumer,
 		orderPaidDecoder: orderPaidDecoder,
-		orderProducer:    orderProducer,
 	}
 }
 

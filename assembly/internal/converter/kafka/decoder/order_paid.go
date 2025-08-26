@@ -15,13 +15,13 @@ func NewOrderPaidDecoder() *decoder {
 	return &decoder{}
 }
 
-func (d *decoder) Decode(data []byte) (model.OrderPaidEvent, error) {
+func (d *decoder) Decode(data []byte) (model.OrderPaid, error) {
 	var pb eventsV1.OrderPaid
 	if err := proto.Unmarshal(data, &pb); err != nil {
-		return model.OrderPaidEvent{}, fmt.Errorf("failed to unmarshal protobuf: %w", err)
+		return model.OrderPaid{}, fmt.Errorf("failed to unmarshal protobuf: %w", err)
 	}
 
-	return model.OrderPaidEvent{
+	return model.OrderPaid{
 		EventUUID:       pb.EventUuid,
 		OrderUUID:       pb.OrderUuid,
 		UserUUID:        pb.UserUuid,

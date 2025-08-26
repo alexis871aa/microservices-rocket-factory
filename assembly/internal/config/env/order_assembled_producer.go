@@ -22,7 +22,7 @@ func NewOrderAssembledProducerConfig() (*orderAssembledProducerConfig, error) {
 	return &orderAssembledProducerConfig{raw: raw}, nil
 }
 
-func (cfg *orderAssembledProducerConfig) TopicName() string {
+func (cfg *orderAssembledProducerConfig) Topic() string {
 	return cfg.raw.TopicName
 }
 

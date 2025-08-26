@@ -9,12 +9,13 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/alexis871aa/microservices-rocket-factory/assembly/internal/app"
 	"github.com/alexis871aa/microservices-rocket-factory/assembly/internal/config"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/closer"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 )
 
-const configPath = "./deploy/compose/inventory/.env"
+const configPath = "./deploy/compose/assembly/.env"
 
 func main() {
 	err := config.Load(configPath)
@@ -27,6 +28,18 @@ func main() {
 	defer gracefulShutdown()
 
 	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
+
+	a, err := app.New(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "❌ Не удалось создать приложение", zap.Error(err))
+		return
+	}
+
+	err = a.Run(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "❌ Ошибка при работе приложения", zap.Error(err))
+		return
+	}
 }
 
 func gracefulShutdown() {
