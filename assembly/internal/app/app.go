@@ -59,7 +59,6 @@ func (a *App) Run(ctx context.Context) error {
 
 func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
-		a.initConfig,
 		a.initDI,
 		a.initLogger,
 		a.initCloser,
@@ -73,10 +72,6 @@ func (a *App) initDeps(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (a *App) initConfig(_ context.Context) error {
-	return config.Load()
 }
 
 func (a *App) initDI(_ context.Context) error {
