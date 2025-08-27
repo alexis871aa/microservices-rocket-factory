@@ -14,6 +14,7 @@ type orderAssembledConsumerConfig struct {
 	raw orderAssembledConsumerEnvConfig
 }
 
+//nolint:dupl
 func NewOrderAssembledConsumerConfig() (*orderAssembledConsumerConfig, error) {
 	var raw orderAssembledConsumerEnvConfig
 	if err := env.Parse(&raw); err != nil {
