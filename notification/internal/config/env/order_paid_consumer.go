@@ -14,7 +14,6 @@ type orderPaidConsumerConfig struct {
 	raw orderPaidConsumerEnvConfig
 }
 
-//nolint:dupl
 func NewOrderPaidConsumerConfig() (*orderPaidConsumerConfig, error) {
 	var raw orderPaidConsumerEnvConfig
 	if err := env.Parse(&raw); err != nil {
