@@ -221,7 +221,7 @@ func (d *diContainer) ConsumerGroup() sarama.ConsumerGroup {
 			config.AppConfig().OrderAssembledConsumerConfig.Config(),
 		)
 		if err != nil {
-			panic(fmt.Errorf("failed to create consumer group: %s\n", err))
+			panic(fmt.Sprintf("failed to create consumer group: %s\n", err))
 		}
 		closer.AddNamed("Kafka consumer group", func(ctx context.Context) error {
 			return d.consumerGroup.Close()
