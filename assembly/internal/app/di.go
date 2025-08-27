@@ -26,8 +26,8 @@ type diContainer struct {
 
 	orderPaidConsumer wrappedKafka.Consumer
 	consumerGroup     sarama.ConsumerGroup
+	orderPaidDecoder  kafkaConverter.OrderPaidDecoder
 
-	orderPaidDecoder      kafkaConverter.OrderPaidDecoder
 	syncProducer          sarama.SyncProducer
 	orderAssemblyProducer wrappedKafka.Producer
 }
