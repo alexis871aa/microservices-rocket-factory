@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -69,6 +71,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initDI,
 		a.initLogger,
 		a.initCloser,
+		a.initTelegramBot,
 	}
 
 	for _, f := range inits {
@@ -101,7 +104,7 @@ func (a *App) initCloser(_ context.Context) error {
 func (a *App) runOrderPaidConsumer(ctx context.Context) error {
 	logger.Info(ctx, "🚀 Order Paid consumer running")
 
-	err := a.diContainer.OrderPaidConsumerService().RunConsumer(ctx)
+	err := a.diContainer.OrderPaidConsumerService(ctx).RunConsumer(ctx)
 	if err != nil {
 		return err
 	}
@@ -112,10 +115,33 @@ func (a *App) runOrderPaidConsumer(ctx context.Context) error {
 func (a *App) runOrderAssembledConsumer(ctx context.Context) error {
 	logger.Info(ctx, "🚀 Order Assembled consumer running")
 
-	err := a.diContainer.OrderAssembledConsumerService().RunConsumer(ctx)
+	err := a.diContainer.OrderAssembledConsumerService(ctx).RunConsumer(ctx)
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (a *App) initTelegramBot(ctx context.Context) error {
+	telegramBot := a.diContainer.TelegramBot(ctx)
+
+	telegramBot.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		logger.Info(ctx, "chat id", zap.Int64("chat_id", update.Message.Chat.ID))
+
+		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: update.Message.Chat.ID,
+			Text:   "🛸 Cosmo Bot активирован! Теперь вы будете получать уведомления о постройке космических кораблей и сделанных заказах!",
+		})
+		if err != nil {
+			logger.Error(ctx, "Failed to send activation message", zap.Error(err))
+		}
+	})
+
+	go func() {
+		logger.Info(ctx, "🤖 Telegram bot started...")
+		telegramBot.Start(ctx)
+	}()
 
 	return nil
 }
