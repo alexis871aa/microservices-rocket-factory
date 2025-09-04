@@ -216,12 +216,6 @@ tasks:
       - task: proto:gen
       - task: ogen:gen
 
-  format&lint:
-    desc: "Запускает format и lint для всех модулей"
-    cmds:
-      - task: format
-      - task: lint
-
   deps:update:
     desc: "Обновление зависимостей в go.mod во всех модулях"
     cmds:
