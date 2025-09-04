@@ -22,3 +22,7 @@ type OrderAssembledConsumerConfig interface {
 type KafkaConfig interface {
 	Brokers() []string
 }
+
+type TelegramBotConfig interface {
+	Token() string
+}
