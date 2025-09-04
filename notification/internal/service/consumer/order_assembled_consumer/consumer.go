@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	kafkaConverter "github.com/alexis871aa/microservices-rocket-factory/notification/internal/converter/kafka"
+	def "github.com/alexis871aa/microservices-rocket-factory/notification/internal/service"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/kafka"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 )
@@ -13,12 +14,14 @@ import (
 type service struct {
 	orderConsumer        kafka.Consumer
 	shipAssembledDecoder kafkaConverter.ShipAssembledDecoder
+	telegramService      def.TelegramService
 }
 
-func NewService(orderConsumer kafka.Consumer, shipAssembledDecoder kafkaConverter.ShipAssembledDecoder) *service {
+func NewService(orderConsumer kafka.Consumer, shipAssembledDecoder kafkaConverter.ShipAssembledDecoder, telegramService def.TelegramService) *service {
 	return &service{
 		orderConsumer:        orderConsumer,
 		shipAssembledDecoder: shipAssembledDecoder,
+		telegramService:      telegramService,
 	}
 }
 

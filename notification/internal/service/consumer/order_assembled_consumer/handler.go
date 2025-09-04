@@ -26,7 +26,11 @@ func (s *service) OrderHandler(ctx context.Context, msg kafka.Message) error {
 		zap.Int64("build_time_sec", event.BuildTimeSec),
 	)
 
-	// дальше добавить логику по отправке сообщение в ТГ (Что корабль собран)
+	err = s.telegramService.SendShipAssembledNotification(ctx, event)
+	if err != nil {
+		logger.Error(ctx, "Failed to send ship assembled notification", zap.Error(err))
+		return err
+	}
 
 	return nil
 }

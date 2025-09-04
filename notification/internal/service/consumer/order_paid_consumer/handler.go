@@ -26,7 +26,11 @@ func (s *service) OrderHandler(ctx context.Context, msg kafka.Message) error {
 		zap.String("transaction_uuid", event.TransactionUUID),
 	)
 
-	// дальше добавить логику по отправке сообщение в ТГ (Что заказ оплачен)
+	err = s.telegramService.SendOrderPaidNotification(ctx, event)
+	if err != nil {
+		logger.Error(ctx, "Failed to send order paid notification", zap.Error(err))
+		return err
+	}
 
 	return nil
 }
