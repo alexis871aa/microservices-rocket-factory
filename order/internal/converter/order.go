@@ -36,6 +36,8 @@ func OrderStatusToAPI(status model.OrderStatus) orderV1.OrderStatus {
 		return orderV1.OrderStatusPAID
 	case model.StatusCancelled:
 		return orderV1.OrderStatusCANCELLED
+	case model.StatusCompleted:
+		return orderV1.OrderStatusCOMPLETED
 	default:
 		return orderV1.OrderStatusUNKNOWN
 	}
@@ -92,20 +94,5 @@ func PaymentMethodToString(paymentMethod model.PaymentMethod) string {
 		return InvestorCard
 	default:
 		return Unknown
-	}
-}
-
-func PaymentMethodFromString(paymentMethod string) model.PaymentMethod {
-	switch paymentMethod {
-	case Card:
-		return model.PaymentMethodCard
-	case Sbp:
-		return model.PaymentMethodSBP
-	case CreditCard:
-		return model.PaymentMethodCreditCard
-	case InvestorCard:
-		return model.PaymentMethodInvestorMoney
-	default:
-		return model.PaymentMethodUnknown
 	}
 }
