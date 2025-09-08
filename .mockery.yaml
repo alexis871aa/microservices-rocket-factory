@@ -43,3 +43,19 @@ packages:
   github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/payment/v1:
     config:
       include-regex: ".*ServiceClient"
+
+  github.com/alexis871aa/microservices-rocket-factory/assembly/internal/config:
+    config:
+      include-regex: ".*Config"
+
+  github.com/alexis871aa/microservices-rocket-factory/assembly/internal/service:
+    config:
+      include-regex: ".*Service"
+
+  github.com/alexis871aa/microservices-rocket-factory/notification/internal/config:
+    config:
+      include-regex: ".*Config"
+
+  github.com/alexis871aa/microservices-rocket-factory/notification/internal/service:
+    config:
+      include-regex: ".*Service"

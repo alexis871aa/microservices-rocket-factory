@@ -21,7 +21,8 @@ func Test_SuccessGetOrder(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	expectedOrder := &model.Order{
@@ -49,7 +50,8 @@ func Test_GetErrorWhenOrderNotFound(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 
@@ -67,7 +69,8 @@ func Test_GetErrorWhenRepositoryGetFails(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	repoErr := errors.New("database connection failed")
@@ -86,7 +89,8 @@ func Test_GetErrorWhenEmptyOrderUUID(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	emptyUUID := ""
 

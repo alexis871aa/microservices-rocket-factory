@@ -20,7 +20,8 @@ func Test_SuccessCreateOrder(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	userUUID := gofakeit.UUID()
 	partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
@@ -62,7 +63,8 @@ func Test_CreateErrorWhenPartsNotFound(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	userUUID := gofakeit.UUID()
 	partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
@@ -85,7 +87,8 @@ func Test_CreateErrorWhenPartialPartsFound(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	userUUID := gofakeit.UUID()
 	partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
@@ -116,7 +119,8 @@ func Test_CreateErrorWhenInventoryClientFails(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	userUUID := gofakeit.UUID()
 	partUUIDs := []string{gofakeit.UUID()}
@@ -140,7 +144,8 @@ func Test_CreateErrorWhenRepositoryCreateFails(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	userUUID := gofakeit.UUID()
 	partUUIDs := []string{gofakeit.UUID()}
@@ -173,7 +178,8 @@ func Test_CreateErrorWhenEmptyPartUUIDs(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	userUUID := gofakeit.UUID()
 	partUUIDs := []string{}

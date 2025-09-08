@@ -3,15 +3,15 @@ module github.com/alexis871aa/microservices-rocket-factory/payment
 go 1.24.4
 
 require (
-	github.com/alexis871aa/microservices-rocket-factory/platform v0.0.0-00010101000000-000000000000
-	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-20250808212652-d1eb6bf8f836
-	github.com/brianvoe/gofakeit/v7 v7.3.0
+	github.com/alexis871aa/microservices-rocket-factory/platform v0.0.0-20250821113046-e52677f54714
+	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-20250821113046-e52677f54714
+	github.com/brianvoe/gofakeit/v7 v7.4.0
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
-	google.golang.org/grpc v1.74.2
+	google.golang.org/grpc v1.75.0
 )
 
 require (
@@ -23,8 +23,8 @@ require (
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250811230008-5f3141c8851a // indirect
-	google.golang.org/protobuf v1.36.7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
+	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

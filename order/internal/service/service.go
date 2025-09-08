@@ -19,3 +19,11 @@ type OrderRepository interface {
 	Update(ctx context.Context, orderUUID string, newOrder model.Order) error
 	Delete(ctx context.Context, orderUUID string) error
 }
+
+type OrderConsumerService interface {
+	RunConsumer(ctx context.Context) error
+}
+
+type OrderProducerService interface {
+	ProduceOrderPaid(ctx context.Context, event model.OrderPaid) error
+}

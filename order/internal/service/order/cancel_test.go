@@ -22,7 +22,8 @@ func Test_SuccessCancelPendingOrder(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -48,7 +49,8 @@ func Test_CancelErrorWhenOrderNotFound(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 
@@ -65,7 +67,8 @@ func Test_CancelErrorWhenOrderAlreadyPaid(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -92,7 +95,8 @@ func Test_CancelErrorWhenOrderAlreadyCancelled(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -117,7 +121,8 @@ func Test_CancelErrorWhenRepositoryGetFails(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	repoErr := errors.New("database connection failed")
@@ -135,7 +140,8 @@ func Test_CancelErrorWhenRepositoryUpdateFails(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	orderUUID := gofakeit.UUID()
 	userUUID := gofakeit.UUID()
@@ -161,7 +167,8 @@ func Test_CancelErrorWhenEmptyUUID(t *testing.T) {
 	orderRepository := serviceMocks.NewOrderRepository(t)
 	inventoryClient := clientMocks.NewInventoryClient(t)
 	paymentClient := clientMocks.NewPaymentClient(t)
-	service := NewService(orderRepository, inventoryClient, paymentClient)
+	orderProducerService := serviceMocks.NewOrderProducerService(t)
+	service := NewService(orderRepository, inventoryClient, paymentClient, orderProducerService)
 
 	emptyUUID := ""
 

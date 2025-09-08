@@ -1,4 +1,5 @@
 version: '3'
+silent: true
 
 # Глобальные переменные проекта
 vars:
@@ -214,12 +215,6 @@ tasks:
     cmds:
       - task: proto:gen
       - task: ogen:gen
-
-  format&lint:
-    desc: "Запускает format и lint для всех модулей"
-    cmds:
-      - task: format
-      - task: lint
 
   deps:update:
     desc: "Обновление зависимостей в go.mod во всех модулях"
@@ -522,6 +517,8 @@ tasks:
 
         echo
         echo "📊 Тест 7: Проверка статуса после оплаты (должен быть PAID)"
+        # Ждем небольшую паузу для обновления статуса
+        sleep 1
         ORDER_INFO_RESPONSE=$(curl -s -X GET "http://localhost:8080/api/v1/orders/$ORDER_UUID")
 
         # Извлекаем статус заказа
@@ -531,12 +528,32 @@ tasks:
         fi
 
         # Проверяем, что статус стал PAID
-        if [[ "$ORDER_STATUS" != *"PAID"* && "$ORDER_STATUS" != *"ASSEMBLED"* ]]; then
+        if [[ "$ORDER_STATUS" != *"PAID"* ]]; then
           echo "❌ Неверный статус заказа после оплаты. Ожидался PAID или ASSEMBLED, получен: $ORDER_STATUS"
           exit 1
         fi
         echo "✅ Статус заказа после оплаты: $ORDER_STATUS"
-
+        
+        # Если статус PAID, ждем сборку
+        if [[ "$ORDER_STATUS" == *"PAID"* ]]; then
+          echo "Ожидаем сборку заказа (11 секунд)..."
+          sleep 11
+        
+          ORDER_INFO_RESPONSE=$(curl -s -X GET "http://localhost:8080/api/v1/orders/$ORDER_UUID")
+          ORDER_STATUS=$(echo $ORDER_INFO_RESPONSE | grep -o '"status":"[^"]*' | cut -d'"' -f4)
+          if [ -z "$ORDER_STATUS" ]; then
+            ORDER_STATUS=$(echo $ORDER_INFO_RESPONSE | grep -o '"status":"[^"]*' | cut -d'"' -f4)
+          fi
+        
+          # Проверяем, что статус изменился на COMPLETED
+          if [[ "$ORDER_STATUS" != *"COMPLETED"* ]]; then
+            echo "❌ Статус заказа не изменился на COMPLETED после ожидания. Текущий статус: $ORDER_STATUS"
+            exit 1
+          fi
+        
+          echo "✅ Статус заказа после ожидания сборки: $ORDER_STATUS (ожидали COMPLETED)"
+        fi
+        
         echo
         echo "📝 Тест 8: Создание второго заказа для отмены (REST API)"
         ORDER2_RESPONSE=$(curl -s -X POST "http://localhost:8080/api/v1/orders" \

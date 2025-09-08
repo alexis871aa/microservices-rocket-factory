@@ -20,6 +20,7 @@ const (
 	StatusPendingPayment OrderStatus = iota
 	StatusPaid
 	StatusCancelled
+	StatusCompleted
 )
 
 type PaymentMethod int
