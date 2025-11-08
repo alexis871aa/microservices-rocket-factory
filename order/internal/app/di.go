@@ -162,6 +162,7 @@ func (d *diContainer) PgxConn(ctx context.Context) *pgx.Conn {
 
 		d.pgxConn = conn
 	}
+
 	return d.pgxConn
 }
 

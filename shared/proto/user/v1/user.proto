@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "common/v1/user.proto";
+
+option go_package = "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/user/v1;user_v1";
+
+service UserService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+/**
+ * Основная информация о новом пользователе
+ */
+message UserRegistrationInfo {
+  common.v1.UserInfo info = 1;  // Основная информация пользователя
+  string password = 2;          // Пароль
+}
+
+/**
+ * Запрос на регистрацию нового пользователе
+ */
+message RegisterRequest {
+  UserRegistrationInfo info = 1;  // Данные для регистрации
+}
+
+/**
+ * Ответ с uuid после создания нового пользователе
+ */
+message RegisterResponse {
+  string user_uuid = 1; // UUID созданного пользователя
+}
+
+/**
+ * Запрос на получение пользователя
+ */
+message GetUserRequest {
+  string user_uuid = 1; // UUID пользователя
+}
+
+/**
+ * Ответ с информацией о пользователе
+ */
+message GetUserResponse {
+  common.v1.User user = 1; // Пользователь
+}

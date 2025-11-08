@@ -59,3 +59,19 @@ packages:
   github.com/alexis871aa/microservices-rocket-factory/notification/internal/service:
     config:
       include-regex: ".*Service"
+
+  github.com/alexis871aa/microservices-rocket-factory/iam/internal/service:
+    config:
+      include-regex: ".*Service|.*Repository"
+
+  github.com/alexis871aa/microservices-rocket-factory/iam/internal/config:
+    config:
+      include-regex: ".*Config"
+
+  github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/auth/v1:
+    config:
+      include-regex: ".*ServiceClient"
+
+  github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/user/v1:
+    config:
+      include-regex: ".*ServiceClient"
