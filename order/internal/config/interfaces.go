@@ -14,6 +14,10 @@ type PaymentGRPCClientConfig interface {
 	Address() string
 }
 
+type IAMGRPCClientConfig interface {
+	Address() string
+}
+
 type OrderHTTPConfig interface {
 	Address() string
 	Port() string

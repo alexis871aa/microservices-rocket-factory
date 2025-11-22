@@ -14,6 +14,7 @@ import (
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/closer"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/grpc/health"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
+	grpcMiddleware "github.com/alexis871aa/microservices-rocket-factory/platform/pkg/middleware/grpc"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
 
@@ -93,7 +94,12 @@ func (a *App) initListener(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	authInterceptor := grpcMiddleware.NewAuthInterceptor(a.diContainer.IAMClient(ctx))
+
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.ChainUnaryInterceptor(authInterceptor.Unary()),
+	)
 	closer.AddNamed("gRPC server", func(ctx context.Context) error {
 		a.grpcServer.GracefulStop()
 		return nil

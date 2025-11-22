@@ -31,6 +31,7 @@ import (
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 	kafkaMiddleware "github.com/alexis871aa/microservices-rocket-factory/platform/pkg/middleware/kafka"
 	orderV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/openapi/order/v1"
+	authV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/auth/v1"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 	paymentV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/payment/v1"
 )
@@ -47,12 +48,14 @@ type diContainer struct {
 
 	inventoryClient client.InventoryClient
 	paymentClient   client.PaymentClient
+	iamClient       authV1.AuthServiceClient
 
 	sqlDb   *sql.DB
 	pgxConn *pgx.Conn
 
 	inventoryGRPCConn *grpc.ClientConn
 	paymentGRPCConn   *grpc.ClientConn
+	iamGRPCConn       *grpc.ClientConn
 
 	migratorRunner *migrator.Migrator
 
@@ -136,6 +139,13 @@ func (d *diContainer) PaymentClient(ctx context.Context) client.PaymentClient {
 	return d.paymentClient
 }
 
+func (d *diContainer) IAMClient(ctx context.Context) authV1.AuthServiceClient {
+	if d.iamClient == nil {
+		d.iamClient = authV1.NewAuthServiceClient(d.IAMGRPCConn(ctx))
+	}
+	return d.iamClient
+}
+
 func (d *diContainer) SqlDB(ctx context.Context) *sql.DB {
 	if d.sqlDb == nil {
 		d.sqlDb = stdlib.OpenDB(*d.PgxConn(ctx).Config().Copy())
@@ -202,6 +212,25 @@ func (d *diContainer) PaymentGRPCConn(_ context.Context) *grpc.ClientConn {
 		d.paymentGRPCConn = conn
 	}
 	return d.paymentGRPCConn
+}
+
+func (d *diContainer) IAMGRPCConn(_ context.Context) *grpc.ClientConn {
+	if d.iamGRPCConn == nil {
+		conn, err := grpc.NewClient(
+			config.AppConfig().IAMClient.Address(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		if err != nil {
+			panic(fmt.Sprintf("💥 failed to connect to IAM service: %v", err))
+		}
+
+		closer.AddNamed("IAM gRPC connection", func(ctx context.Context) error {
+			return conn.Close()
+		})
+
+		d.iamGRPCConn = conn
+	}
+	return d.iamGRPCConn
 }
 
 func (d *diContainer) MigratorRunner(ctx context.Context) *migrator.Migrator {

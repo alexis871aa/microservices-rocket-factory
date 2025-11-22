@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	inventoryV1API "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/api/inventory/v1"
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/config"
@@ -15,6 +17,7 @@ import (
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service"
 	inventoryService "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service/part"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/closer"
+	authV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/auth/v1"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
 
@@ -22,9 +25,11 @@ type diContainer struct {
 	inventoryV1API      inventoryV1.InventoryServiceServer
 	inventoryService    service.InventoryService
 	inventoryRepository service.InventoryRepository
+	iamClient           authV1.AuthServiceClient
 
 	mongoDBClient *mongo.Client
 	mongoDBHandle *mongo.Database
+	iamGRPCConn   *grpc.ClientConn
 }
 
 func NewDiContainer() *diContainer {
@@ -93,4 +98,30 @@ func (d *diContainer) MongoDBClient(ctx context.Context) *mongo.Client {
 	}
 
 	return d.mongoDBClient
+}
+
+func (d *diContainer) IAMClient(ctx context.Context) authV1.AuthServiceClient {
+	if d.iamClient == nil {
+		d.iamClient = authV1.NewAuthServiceClient(d.IAMGRPCConn(ctx))
+	}
+	return d.iamClient
+}
+
+func (d *diContainer) IAMGRPCConn(_ context.Context) *grpc.ClientConn {
+	if d.iamGRPCConn == nil {
+		conn, err := grpc.NewClient(
+			config.AppConfig().IAMClient.Address(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		if err != nil {
+			panic(fmt.Sprintf("💥 failed to connect to IAM service: %v", err))
+		}
+
+		closer.AddNamed("IAM gRPC connection", func(ctx context.Context) error {
+			return conn.Close()
+		})
+
+		d.iamGRPCConn = conn
+	}
+	return d.iamGRPCConn
 }
