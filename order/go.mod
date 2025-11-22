@@ -3,24 +3,24 @@ module github.com/alexis871aa/microservices-rocket-factory/order
 go 1.24.4
 
 require (
-	github.com/IBM/sarama v1.46.0
+	github.com/IBM/sarama v1.46.3
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/alexis871aa/microservices-rocket-factory/platform v0.0.0-20250821113046-e52677f54714
-	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-20250821113046-e52677f54714
-	github.com/brianvoe/gofakeit/v7 v7.4.0
+	github.com/alexis871aa/microservices-rocket-factory/platform v0.0.0-20250908115142-da6ebaef04a0
+	github.com/alexis871aa/microservices-rocket-factory/shared v0.0.0-20250908115142-da6ebaef04a0
+	github.com/brianvoe/gofakeit/v7 v7.8.0
 	github.com/caarlos0/env/v11 v11.3.1
-	github.com/go-chi/chi/v5 v5.2.2
+	github.com/go-chi/chi/v5 v5.2.3
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.7.5
+	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
-	github.com/pressly/goose/v3 v3.24.3
-	github.com/samber/lo v1.51.0
-	github.com/stretchr/testify v1.11.0
-	go.uber.org/zap v1.27.0
-	google.golang.org/grpc v1.75.0
-	google.golang.org/protobuf v1.36.8
+	github.com/pressly/goose/v3 v3.26.0
+	github.com/samber/lo v1.52.0
+	github.com/stretchr/testify v1.11.1
+	go.uber.org/zap v1.27.1
+	google.golang.org/grpc v1.77.0
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
@@ -32,7 +32,7 @@ require (
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
-	github.com/go-faster/jx v1.1.0 // indirect
+	github.com/go-faster/jx v1.2.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -46,31 +46,32 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.1 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
-	github.com/ogen-go/ogen v1.14.0 // indirect
+	github.com/ogen-go/ogen v1.16.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
-	github.com/segmentio/asm v1.2.0 // indirect
+	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/otel v1.37.0 // indirect
-	go.opentelemetry.io/otel/metric v1.37.0 // indirect
-	go.opentelemetry.io/otel/trace v1.37.0 // indirect
+	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
+	go.opentelemetry.io/otel v1.38.0 // indirect
+	go.opentelemetry.io/otel/metric v1.38.0 // indirect
+	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
-	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
+	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/exp v0.0.0-20251113190631-e25ba8c21ef6 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251111163417-95abcf5c77ba // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

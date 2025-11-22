@@ -13,6 +13,7 @@ var appConfig *config
 type config struct {
 	InventoryClient              InventoryGRPCClientConfig
 	PaymentClient                PaymentGRPCClientConfig
+	IAMClient                    IAMGRPCClientConfig
 	OrderHTTP                    OrderHTTPConfig
 	Logger                       LoggerConfig
 	Postgres                     PostgresConfig
@@ -33,6 +34,11 @@ func Load(path ...string) error {
 	}
 
 	paymentClientCfg, err := env.NewPaymentClientConfig()
+	if err != nil {
+		return err
+	}
+
+	iamClientCfg, err := env.NewIAMGRPCConfig()
 	if err != nil {
 		return err
 	}
@@ -70,6 +76,7 @@ func Load(path ...string) error {
 	appConfig = &config{
 		InventoryClient:              inventoryClientCfg,
 		PaymentClient:                paymentClientCfg,
+		IAMClient:                    iamClientCfg,
 		OrderHTTP:                    orderHTTPCfg,
 		Logger:                       loggerCfg,
 		Postgres:                     postgresCfg,

@@ -10,6 +10,10 @@ type InventoryGRPCConfig interface {
 	Port() string
 }
 
+type IAMGRPCClientConfig interface {
+	Address() string
+}
+
 type MongoConfig interface {
 	URI() string
 	DatabaseName() string

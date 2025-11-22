@@ -15,6 +15,7 @@ import (
 	customMiddleware "github.com/alexis871aa/microservices-rocket-factory/order/internal/middleware"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/closer"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
+	httpMiddleware "github.com/alexis871aa/microservices-rocket-factory/platform/pkg/middleware/http"
 )
 
 type App struct {
@@ -127,6 +128,9 @@ func (a *App) initRouter(ctx context.Context) error {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(2 * time.Second))
 	r.Use(customMiddleware.RequestLogger)
+
+	authMiddleware := httpMiddleware.NewAuthMiddleware(a.diContainer.IAMClient(ctx))
+	r.Use(authMiddleware.Handle)
 
 	orderServer := a.diContainer.OrderV1Server(ctx)
 	r.Mount("/", orderServer)

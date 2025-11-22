@@ -8,7 +8,7 @@ import (
 	orderV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/openapi/order/v1"
 )
 
-func (a *api) CreateOrder(ctx context.Context, req *orderV1.CreateOrderRequest) (orderV1.CreateOrderRes, error) {
+func (a *api) CreateOrder(ctx context.Context, req *orderV1.CreateOrderRequest, params orderV1.CreateOrderParams) (orderV1.CreateOrderRes, error) {
 	order, err := a.orderService.Create(ctx, req.UserUUID, req.PartUuids)
 	if err != nil {
 		switch {
