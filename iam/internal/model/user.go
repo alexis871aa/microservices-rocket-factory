@@ -1,16 +1,40 @@
 package model
 
-import "time"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"time"
+)
 
 type NotificationMethod struct {
-	ProviderName string // Провайдер: telegram, email, push и т.д.
-	Target       string // Адрес/идентификатор назначения (email, чат-id)
+	ProviderName string `json:"provider_name"` // Провайдер: telegram, email, push и т.д.
+	Target       string `json:"target"`        // Адрес/идентификатор назначения (email, чат-id)
 }
 
 type UserInfo struct {
-	Login               string               // Логин
-	Email               string               // Email
-	NotificationMethods []NotificationMethod //	Каналы уведомлений
+	Login               string               `json:"login"`                // Логин
+	Email               string               `json:"email"`                // Email
+	NotificationMethods []NotificationMethod `json:"notification_methods"` // Каналы уведомлений
+}
+
+// Scan реализует интерфейс sql.Scanner для UserInfo
+func (ui *UserInfo) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan UserInfo: value is not []byte")
+	}
+
+	return json.Unmarshal(bytes, ui)
+}
+
+// Value реализует интерфейс driver.Valuer для UserInfo
+func (ui UserInfo) Value() (driver.Value, error) {
+	return json.Marshal(ui)
 }
 
 type User struct {

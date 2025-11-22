@@ -1,16 +1,20 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/alexis871aa/microservices-rocket-factory/iam/internal/model"
+)
 
 type Session struct {
-	UserUUID           string               `bson:"user_uuid"`
-	Login              string               `bson:"login"`
-	Email              string               `bson:"email"`
-	NotificationMethod []NotificationMethod `bson:"notification_method"`
-	UUID               string               `bson:"uuid"`
-	CreatedAt          time.Time            `bson:"created_at"`
-	UpdatedAt          *time.Time           `bson:"updated_at,omitempty"`
-	ExpiresAt          time.Time            `bson:"expires_at"`
+	UserUUID           string                     `bson:"user_uuid"`
+	Login              string                     `bson:"login"`
+	Email              string                     `bson:"email"`
+	NotificationMethod []model.NotificationMethod `bson:"notification_method"`
+	UUID               string                     `bson:"uuid"`
+	CreatedAt          time.Time                  `bson:"created_at"`
+	UpdatedAt          *time.Time                 `bson:"updated_at,omitempty"`
+	ExpiresAt          time.Time                  `bson:"expires_at"`
 }
 
 type SessionRedisView struct {

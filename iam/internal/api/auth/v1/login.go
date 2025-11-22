@@ -16,6 +16,10 @@ import (
 func (a *api) Login(ctx context.Context, req *authV1.LoginRequest) (*authV1.LoginResponse, error) {
 	sessionUUID, err := a.authService.Login(ctx, req.GetLogin(), req.GetPassword())
 	if err != nil {
+		if errors.Is(err, model.ErrInvalidCredentials) {
+			logger.Error(ctx, "invalid credentials", zap.Error(err))
+			return nil, status.Errorf(codes.Unauthenticated, "invalid credentials")
+		}
 		if errors.Is(err, model.ErrSessionBadRequest) {
 			logger.Error(ctx, "bad request during login", zap.Error(err))
 			return nil, status.Errorf(codes.InvalidArgument, "bad request during login")

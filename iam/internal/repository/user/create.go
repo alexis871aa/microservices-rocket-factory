@@ -22,16 +22,16 @@ func (r *repository) Create(ctx context.Context, info model.UserInfo, password s
 
 	user := repoModel.User{
 		UserUUID:  uuid.NewString(),
-		Info:      *repoConverter.UserInfoToRepo(info),
+		Info:      repoConverter.UserInfoToRepo(info),
 		CreatedAt: time.Now(),
-		Password:  hashedPassword,
+		Password:  string(hashedPassword),
 	}
 
 	builder := sq.Insert("users").
 		PlaceholderFormat(sq.Dollar).
-		Columns("uuid", "info", "created_at", "password_hash").
-		Values(user.UserUUID, user.Info, user.CreatedAt, hashedPassword).
-		Suffix("RETURNING uuid")
+		Columns("user_uuid", "info", "created_at", "password_hash").
+		Values(user.UserUUID, user.Info, user.CreatedAt, user.Password).
+		Suffix("RETURNING user_uuid")
 
 	query, args, err := builder.ToSql()
 	if err != nil {
