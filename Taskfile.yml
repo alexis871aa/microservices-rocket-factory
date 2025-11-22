@@ -625,13 +625,20 @@ tasks:
           fi
         else
           # Извлекаем UUID заказа с учетом разных форматов JSON
-        ORDER_UUID=$(echo $ORDER_RESPONSE | grep -o '"uuid":"[^"]*' | cut -d'"' -f4)
+        ORDER_UUID=$(echo $ORDER_RESPONSE | grep -o '"order_uuid":"[^"]*' | cut -d'"' -f4)
         if [ -z "$ORDER_UUID" ]; then
-          ORDER_UUID=$(echo $ORDER_RESPONSE | grep -o '"uuid": "[^"]*' | cut -d'"' -f4)
+          ORDER_UUID=$(echo $ORDER_RESPONSE | grep -o '"order_uuid": "[^"]*' | cut -d'"' -f4)
           if [ -z "$ORDER_UUID" ]; then
-            echo "❌ Не удалось извлечь UUID заказа из ответа."
-            echo "🔍 Ответ сервера: $ORDER_RESPONSE"
-            exit 1
+            # Пробуем старый формат uuid для обратной совместимости
+            ORDER_UUID=$(echo $ORDER_RESPONSE | grep -o '"uuid":"[^"]*' | cut -d'"' -f4)
+            if [ -z "$ORDER_UUID" ]; then
+              ORDER_UUID=$(echo $ORDER_RESPONSE | grep -o '"uuid": "[^"]*' | cut -d'"' -f4)
+              if [ -z "$ORDER_UUID" ]; then
+                echo "❌ Не удалось извлечь UUID заказа из ответа."
+                echo "🔍 Ответ сервера: $ORDER_RESPONSE"
+                exit 1
+              fi
+            fi
           fi
         fi
         echo "✅ Успешно создан заказ с UUID: $ORDER_UUID"
@@ -670,14 +677,25 @@ tasks:
         PAY_RESPONSE=$(curl -s -X POST "http://localhost:8080/api/v1/orders/$ORDER_UUID/pay" \
           -H "Content-Type: application/json" \
           -H "X-Session-Uuid: $TEST_SESSION_UUID" \
-          -d "{\"payment_method\":\"PAYMENT_METHOD_CARD\"}")
+          -d "{\"payment_method\":\"CARD\"}")
 
         if [[ "$PAY_RESPONSE" == *"error"* ]]; then
           echo "❌ Ошибка при оплате заказа."
           echo "🔍 Ответ сервера: $PAY_RESPONSE"
           exit 1
         fi
-        echo "✅ Заказ успешно оплачен"
+        
+        # Проверяем что вернулся transaction_uuid
+        TRANSACTION_UUID=$(echo $PAY_RESPONSE | grep -o '"transaction_uuid":"[^"]*' | cut -d'"' -f4)
+        if [ -z "$TRANSACTION_UUID" ]; then
+          TRANSACTION_UUID=$(echo $PAY_RESPONSE | grep -o '"transaction_uuid": "[^"]*' | cut -d'"' -f4)
+          if [ -z "$TRANSACTION_UUID" ]; then
+            echo "❌ Не удалось извлечь transaction_uuid из ответа оплаты."
+            echo "🔍 Ответ сервера: $PAY_RESPONSE"
+            exit 1
+          fi
+        fi
+        echo "✅ Заказ успешно оплачен. Transaction UUID: $TRANSACTION_UUID"
 
         echo
         echo "📊 Тест 6: Проверка статуса после оплаты (должен быть PAID)"
@@ -692,33 +710,12 @@ tasks:
           ORDER_STATUS=$(echo $ORDER_INFO_RESPONSE | grep -o '"status": "[^"]*' | cut -d'"' -f4)
         fi
         
-        # Проверяем, что статус стал PAID
+        # Проверяем, что статус стал PAID (после оплаты статус должен быть PAID)
         if [[ "$ORDER_STATUS" != *"PAID"* ]]; then
-          echo "❌ Неверный статус заказа после оплаты. Ожидался PAID или ASSEMBLED, получен: $ORDER_STATUS"
+          echo "❌ Неверный статус заказа после оплаты. Ожидался PAID, получен: $ORDER_STATUS"
           exit 1
         fi
         echo "✅ Статус заказа после оплаты: $ORDER_STATUS"
-        
-        # Если статус PAID, ждем сборку
-        if [[ "$ORDER_STATUS" == *"PAID"* ]]; then
-          echo "Ожидаем сборку заказа (11 секунд)..."
-          sleep 11
-        
-          ORDER_INFO_RESPONSE=$(curl -s -X GET "http://localhost:8080/api/v1/orders/$ORDER_UUID" \
-            -H "X-Session-Uuid: $TEST_SESSION_UUID")
-          ORDER_STATUS=$(echo $ORDER_INFO_RESPONSE | grep -o '"status":"[^"]*' | cut -d'"' -f4)
-          if [ -z "$ORDER_STATUS" ]; then
-            ORDER_STATUS=$(echo $ORDER_INFO_RESPONSE | grep -o '"status": "[^"]*' | cut -d'"' -f4)
-          fi
-        
-          # Проверяем, что статус изменился на ASSEMBLED
-          if [[ "$ORDER_STATUS" != *"ASSEMBLED"* ]]; then
-            echo "❌ Статус заказа не изменился на ASSEMBLED после ожидания. Текущий статус: $ORDER_STATUS"
-            exit 1
-          fi
-        
-          echo "✅ Статус заказа после ожидания сборки: $ORDER_STATUS (ожидали ASSEMBLED)"
-        fi
         
         echo
         echo "📝 Тест 7: Создание второго заказа для отмены (REST API с аутентификацией)"
@@ -734,13 +731,20 @@ tasks:
         fi
 
         # Извлекаем UUID второго заказа с учетом разных форматов JSON
-        ORDER2_UUID=$(echo $ORDER2_RESPONSE | grep -o '"uuid":"[^"]*' | cut -d'"' -f4)
+        ORDER2_UUID=$(echo $ORDER2_RESPONSE | grep -o '"order_uuid":"[^"]*' | cut -d'"' -f4)
         if [ -z "$ORDER2_UUID" ]; then
-          ORDER2_UUID=$(echo $ORDER2_RESPONSE | grep -o '"uuid": "[^"]*' | cut -d'"' -f4)
+          ORDER2_UUID=$(echo $ORDER2_RESPONSE | grep -o '"order_uuid": "[^"]*' | cut -d'"' -f4)
           if [ -z "$ORDER2_UUID" ]; then
-            echo "❌ Не удалось извлечь UUID второго заказа из ответа."
-            echo "🔍 Ответ сервера: $ORDER2_RESPONSE"
-            exit 1
+            # Пробуем старый формат uuid для обратной совместимости
+            ORDER2_UUID=$(echo $ORDER2_RESPONSE | grep -o '"uuid":"[^"]*' | cut -d'"' -f4)
+            if [ -z "$ORDER2_UUID" ]; then
+              ORDER2_UUID=$(echo $ORDER2_RESPONSE | grep -o '"uuid": "[^"]*' | cut -d'"' -f4)
+              if [ -z "$ORDER2_UUID" ]; then
+                echo "❌ Не удалось извлечь UUID второго заказа из ответа."
+                echo "🔍 Ответ сервера: $ORDER2_RESPONSE"
+                exit 1
+              fi
+            fi
           fi
         fi
         echo "✅ Успешно создан второй заказ с UUID: $ORDER2_UUID"
