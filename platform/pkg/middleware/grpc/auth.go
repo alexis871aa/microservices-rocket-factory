@@ -2,12 +2,9 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 
 	authV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/auth/v1"
 	commonV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/common/v1"
@@ -50,6 +47,10 @@ func (i *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (any, error) {
+		if info.FullMethod == "/grpc.health.v1.Health/Check" {
+			return handler(ctx, req)
+		}
+
 		authCtx, err := i.authenticate(ctx)
 		if err != nil {
 			return nil, err
@@ -64,26 +65,23 @@ func (i *AuthInterceptor) authenticate(ctx context.Context) (context.Context, er
 	// Извлекаем metadata из контекста
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "missing metadata")
+		return ctx, nil
 	}
 
 	// Получаем session UUID из metadata
 	sessionUUIDs := md.Get(SessionUUIDMetadataKey)
-	if len(sessionUUIDs) == 0 {
-		return nil, status.Error(codes.Unauthenticated, "missing session-uuid in metadata")
+	if len(sessionUUIDs) == 0 || sessionUUIDs[0] == "" {
+		return ctx, nil
 	}
 
 	sessionUUID := sessionUUIDs[0]
-	if sessionUUID == "" {
-		return nil, status.Error(codes.Unauthenticated, "empty session-uuid")
-	}
 
 	// Валидируем сессию через IAM сервис
 	whoamiRes, err := i.iamClient.Whoami(ctx, &authV1.WhoamiRequest{
 		SessionUuid: sessionUUID,
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("invalid session: %v", err))
+		return ctx, nil
 	}
 
 	// Добавляем пользователя и session UUID в контекст
