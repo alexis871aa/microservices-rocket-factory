@@ -94,11 +94,19 @@ func (a *App) initListener(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	authInterceptor := grpcMiddleware.NewAuthInterceptor(a.diContainer.IAMClient(ctx))
+	// Проверяем, нужна ли аутентификация (отключаем только для тестов)
+	var interceptors []grpc.UnaryServerInterceptor
+
+	// Если IAM client доступен, добавляем auth interceptor
+	iamClient := a.diContainer.IAMClient(ctx)
+	if iamClient != nil {
+		authInterceptor := grpcMiddleware.NewAuthInterceptor(iamClient)
+		interceptors = append(interceptors, authInterceptor.Unary())
+	}
 
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.ChainUnaryInterceptor(authInterceptor.Unary()),
+		grpc.ChainUnaryInterceptor(interceptors...),
 	)
 	closer.AddNamed("gRPC server", func(ctx context.Context) error {
 		a.grpcServer.GracefulStop()

@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service"
 	inventoryService "github.com/alexis871aa/microservices-rocket-factory/inventory/internal/service/part"
 	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/closer"
+	"github.com/alexis871aa/microservices-rocket-factory/platform/pkg/logger"
 	authV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/auth/v1"
 	inventoryV1 "github.com/alexis871aa/microservices-rocket-factory/shared/pkg/proto/inventory/v1"
 )
@@ -102,19 +104,24 @@ func (d *diContainer) MongoDBClient(ctx context.Context) *mongo.Client {
 
 func (d *diContainer) IAMClient(ctx context.Context) authV1.AuthServiceClient {
 	if d.iamClient == nil {
-		d.iamClient = authV1.NewAuthServiceClient(d.IAMGRPCConn(ctx))
+		conn := d.IAMGRPCConn(ctx)
+		if conn == nil {
+			return nil
+		}
+		d.iamClient = authV1.NewAuthServiceClient(conn)
 	}
 	return d.iamClient
 }
 
-func (d *diContainer) IAMGRPCConn(_ context.Context) *grpc.ClientConn {
+func (d *diContainer) IAMGRPCConn(ctx context.Context) *grpc.ClientConn {
 	if d.iamGRPCConn == nil {
 		conn, err := grpc.NewClient(
 			config.AppConfig().IAMClient.Address(),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
-			panic(fmt.Sprintf("💥 failed to connect to IAM service: %v", err))
+			logger.Warn(ctx, "⚠️ IAM service not available, running without authentication", zap.Error(err))
+			return nil
 		}
 
 		closer.AddNamed("IAM gRPC connection", func(ctx context.Context) error {

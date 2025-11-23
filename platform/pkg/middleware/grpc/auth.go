@@ -81,7 +81,7 @@ func (i *AuthInterceptor) authenticate(ctx context.Context) (context.Context, er
 		SessionUuid: sessionUUID,
 	})
 	if err != nil {
-		return ctx, nil
+		return ctx, err
 	}
 
 	// Добавляем пользователя и session UUID в контекст
