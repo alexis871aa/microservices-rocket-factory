@@ -44,14 +44,3 @@ jobs:
     with:
       modules: ${{ needs.extract-vars.outputs.modules }}
       go-version: ${{ needs.extract-vars.outputs.go-version }}
-
-  coverage:
-    #if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/test-coverage-reusable.yml
-    needs: integration-test
-    with:
-      modules: ${{ needs.extract-vars.outputs.modules }}
-      go-version: ${{ needs.extract-vars.outputs.go-version }}
-      gist-id: "29ee3842b23db8492fdabd007a6f3721"
-    secrets:
-      GIST_SECRET: ${{ secrets.GIST_SECRET }}
